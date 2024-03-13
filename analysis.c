@@ -139,6 +139,9 @@ InverseTrigonometric *createInverseTrigonometric(InverseTrigonometricType type, 
 void destroyInverseTrigonometric(InverseTrigonometric *it);
 double evaluateInverseTrigonometric(InverseTrigonometric *it, double value);
 
+double evaluate(EVALABLE *e, double value);
+void destroy(EVALABLE *e);
+
 /* Function implementations */
 
 // Variable functions
@@ -153,6 +156,7 @@ Variable *createVariable(EVALABLE *cofactor) {
 }
 
 void destroyVariable(Variable *v) {
+    destroy(v->cofactor);
     free(v);
 }
 
@@ -220,6 +224,8 @@ Trigonometric *createTrigonometric(TrigonometricType type, EVALABLE *cofactor, E
 }
 
 void destroyTrigonometric(Trigonometric *t) {
+    destroy(t->cofactor);
+    destroy(t->arg);
     free(t);
 }
 
@@ -257,6 +263,8 @@ InverseTrigonometric *createInverseTrigonometric(InverseTrigonometricType type, 
 }
 
 void destroyInverseTrigonometric(InverseTrigonometric *it) {
+    destroy(it->cofactor);
+    destroy(it->arg);
     free(it);
 }
 
@@ -298,6 +306,9 @@ Logarithm *createLogarithm(EVALABLE *cofactor, EVALABLE *base, EVALABLE *exponen
 }
 
 void destroyLogarithm(Logarithm *l) {
+    destroy(l->cofactor);
+    destroy(l->base);
+    destroy(l->exponent);
     free(l);
 }
 
@@ -330,7 +341,34 @@ double evaluateFunction(Function *f, double value) {
     return result;
 }
 
-// Main evaluation function
+// Main functions
+
+void destroy(EVALABLE *e) {
+    switch (checkType(e)) {
+        case CONSTANT:
+            destroyConstant((Constant *)e);
+            break;
+        case VARIABLE:
+            destroyVariable((Variable *)e);
+            break;
+        case EXPONENTIAL:
+            destroyExponential((Exponential *)e);
+            break;
+        case TRIGONOMETRIC:
+            destroyTrigonometric((Trigonometric *)e);
+            break;
+        case INVERSE_TRIGONOMETRIC:
+            destroyInverseTrigonometric((InverseTrigonometric *)e);
+            break;
+        case LOGARITHM:
+            destroyLogarithm((Logarithm *)e);
+            break;
+        case FUNCTION:
+            destroyFunction((Function *)e);
+            break;
+    }
+}
+
 double evaluate(EVALABLE *e, double value) {
     switch (checkType(e)) {
         case CONSTANT:
@@ -359,6 +397,7 @@ int main() {
     Trigonometric *s = createTrigonometric(SIN, NULL, (EVALABLE *)l);
     Exponential *e = createExponential(NULL, (EVALABLE *)x, (EVALABLE *)s);
     printf("%f\n", evaluate((EVALABLE *)e, 7));
+    destroy((EVALABLE *)e);
     return 0;
 }
 
