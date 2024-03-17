@@ -111,7 +111,7 @@ typedef struct _Logarithm {
     EvalAbleType type;
     EVALABLE *cofactor;
     EVALABLE *base;
-    EVALABLE *exponent;
+    EVALABLE *value;
 } Logarithm;
 
 /* Function prototypes */
@@ -133,7 +133,7 @@ double evaluateExponential(Exponential *e, double value);
 EVALABLE *deriveExponential(Exponential *e);    
 void printExponential(Exponential *e);
 
-Logarithm *createLogarithm(EVALABLE *cofactor, EVALABLE *base, EVALABLE *exponent);
+Logarithm *createLogarithm(EVALABLE *cofactor, EVALABLE *base, EVALABLE *value);
 void destroyLogarithm(Logarithm *l);
 double evaluateLogarithm(Logarithm *l, double value);
 EVALABLE *deriveLogarithm(Logarithm *l);
@@ -419,7 +419,7 @@ void printInverseTrigonometric(InverseTrigonometric *it) {
 
 // Logarithm functions
 
-Logarithm *createLogarithm(EVALABLE *cofactor, EVALABLE *base, EVALABLE *exponent) {
+Logarithm *createLogarithm(EVALABLE *cofactor, EVALABLE *base, EVALABLE *value) {
     Logarithm *l = (Logarithm *)malloc(sizeof(Logarithm));
     l->type = LOGARITHM;
     if (cofactor == NULL) {
@@ -427,25 +427,27 @@ Logarithm *createLogarithm(EVALABLE *cofactor, EVALABLE *base, EVALABLE *exponen
     }
     l->cofactor = cofactor;
     if (base == NULL) {
-        base = (EVALABLE *)createConstant(1);
+        base = (EVALABLE *)createConstant(10);
     }
     l->base = base;
-    if (exponent == NULL) {
-        exponent = (EVALABLE *)createConstant(1);
+    if (value == NULL) {
+        value = (EVALABLE *)createConstant(1);
     }
-    l->exponent = exponent;
+    l->value = value;
     return l;
 }
 
 void destroyLogarithm(Logarithm *l) {
     destroy(l->cofactor);
     destroy(l->base);
-    destroy(l->exponent);
+    destroy(l->value);
     free(l);
 }
 
 double evaluateLogarithm(Logarithm *l, double value) {
-    return evaluate(l->cofactor, value) * log(evaluate(l->base, value)) / log(evaluate(l->exponent, value));
+    // printf("[DEBUG]: evaluateLogarithm: Check implementation & test\n");
+    // log_b(a) = log(a) / log(b) 
+    return evaluate(l->cofactor, value) * log(evaluate(l->value, value)) / log(evaluate(l->base, value));
 }
 
 EVALABLE *deriveLogarithm(Logarithm *l) {
@@ -456,9 +458,9 @@ void printLogarithm(Logarithm *l) {
     printf("(");
     print(l->cofactor);
     printf(")log_");
-    print(l->exponent);
-    printf("(");
     print(l->base);
+    printf("(");
+    print(l->value);
     printf(")");
 }
 
@@ -658,49 +660,125 @@ double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon)
     return c;
 }
 
-int main() {
-    // (x-5)(x-10) -> x^2 - 15x + 50
-    // roots: 5, 10
-    // a = 3, b = 7, epsilon = 0.0001
-    Function *f = createFunction();
-    Exponential *x2 = createExponential(NULL, (EVALABLE *)createVariable(NULL), (EVALABLE *)createConstant(2));
-    Variable *x15 = createVariable((EVALABLE *)createConstant(-15));
-    Constant *x50 = createConstant(50);
+/* Parser functions */
 
-    addFunctionArg(f, (EVALABLE *)x2);
-    addFunctionArg(f, (EVALABLE *)x15);
-    addFunctionArg(f, (EVALABLE *)x50);
+char *parseExpression(char *input, EVALABLE **expression);
+char *parseLog(char *input, EVALABLE* cofactor, Logarithm **log);
+char *parseLn(char *input, EVALABLE* cofactor, Logarithm **log);
 
-    printf("f(x) = ");
-    print((EVALABLE *)f);
-    printf("\n");
+// Creata log function from string
+char *parseLog(char *input, EVALABLE* cofactor, Logarithm **log)
+{
+    int i = 0;
+    // Check if starts with log
+    char tmp[4];
+    strncpy(tmp, input, 3);
+    if (strcmp(tmp, "log") != 0)
+    {
+        return input;
+    }
+    input += 3;
+    EVALABLE *base;
+    if (input[0] == '_') // Parse base
+    {
+        input++;
+        input = parseExpression(input, &base);
+    }
+    else
+    {
+        base = (EVALABLE *)createConstant(10);
+    }
+    if (input[0] != '(')
+    {
+        printf("Syntax error: Expected '(' after log\n");
+        exit(1);
+    }
+    EVALABLE *value;
+    input = parseExpression(input, &value);
+    if (cofactor == NULL)
+        cofactor = (EVALABLE *)createConstant(1);
+    *log = createLogarithm(cofactor, base, value);
+    return input;
+}
 
-    EVALABLE *df = derive((EVALABLE *)f);
-    printf("f'(x) = ");
-    print(df);
-    printf("\n");
+// Create ln function from string
+char *parseLn(char *input, EVALABLE* cofactor, Logarithm **log)
+{
+    int i = 0;
+    if (strcmp(input, "ln") != 0)
+    {
+        return input;
+    }
+    input += 2;
+    if (input[0] != '(')
+    {
+        printf("Syntax error: Expected '(' after ln\n");
+        exit(1);
+    }
+    EVALABLE *value;
+    input = parseExpression(input, &value);
+    if (cofactor == NULL)
+        cofactor = (EVALABLE *)createConstant(1);
+    *log = createLogarithm(cofactor, (EVALABLE *)createConstant(M_E), value);
+    return input;
+}
 
+char *parseTrigonometric(char *input, EVALABLE *cofactor, Trigonometric **trig)
+{
+    int i = 0;
+    TrigonometricType type;
+    EVALABLE *arg;
+    char tmp[4];
+    strncpy(tmp, input, 3);
+    if (strcmp(tmp, "sin") == 0)
+        type = SIN;
+    else if (strcmp(tmp, "cos") == 0)
+        type = COS;
+    else if (strcmp(tmp, "tan") == 0)
+        type = TAN;
+    else if (strcmp(tmp, "csc") == 0)
+        type = CSC;
+    else if (strcmp(tmp, "sec") == 0)
+        type = SEC;
+    else if (strcmp(tmp, "cot") == 0)
+        type = COT;
+    else
+        return input;
+    input += 3;
+    if (input[0] != '(')
+    {
+        printf("Syntax error: Expected '(' after trigonometric function\n");
+        exit(1);
+    }
+    input = parseExpression(input, &arg);
+    if (cofactor == NULL)
+        cofactor = (EVALABLE *)createConstant(1);
+    *trig = createTrigonometric(type, cofactor, arg);
+    return input;
+}
+
+char *parseExpression(char *input, EVALABLE **expression)
+{
+    int i = 0;
+    char *start = input;
+    char *end = input;
+
+  
+}
+
+int main()
+{
 
     // Get string input from user and parse it to create a function
-    
-    printf("Enter a function: ");
-    // char input[256];
-    // scanf("%s", input);
-    char input[] = "x^(sin(log_5 (x3))";
-    printf("You entered: %s\n", input);
 
+    char test[] = "15*log_5(sin(5x))";
+    EVALABLE *e;
+    parseExpression(test, &e);
+    print(e);
 
-    int idx = 0;
-    char d[] = "+-*/^_()";
-    char nextDelim = input[strcspn(input, d)];
-    char *token = strtok(input, d);
-    while (token != NULL) {
-        printf("Token: %s\n", token);
-        printf("Next Delim: %c\n", nextDelim);
-        nextDelim = input[strcspn(input, d)];
-        token = strtok(NULL, d);
-    }
-
+    // Solve the function
+    double result = evaluate(e, 25);
+    printf("\nResult: %Lf\n", result);
 
     return 0;
 }
