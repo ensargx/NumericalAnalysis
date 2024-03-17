@@ -763,6 +763,10 @@ char *parseExpression(char *input, EVALABLE **expression)
     char *start = input;
     char *end = input;
 
+    // TODO: 
+    // belkide en iyisi önce parantezleri olmayanları çözüp sonra parantezleri çözmek
+    // mesela parantez yoksa toplama çıkarmaları kontrol edeblirim.
+    // parantez işi biraz karışık olabilir.
   
 }
 
