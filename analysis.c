@@ -662,112 +662,82 @@ double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon)
 
 /* Parser functions */
 
-char *parseExpression(char *input, EVALABLE **expression);
-char *parseLog(char *input, EVALABLE* cofactor, Logarithm **log);
-char *parseLn(char *input, EVALABLE* cofactor, Logarithm **log);
+char *parseExpression(char *input, EVALABLE **e);
+char *parseLogarithm(char *input, EVALABLE **e);
+char *parseInsideParantheses(char *input, EVALABLE **e);
 
-// Creata log function from string
-char *parseLog(char *input, EVALABLE* cofactor, Logarithm **log)
+char *parseInsideParantheses(char *input, EVALABLE **e)
 {
-    int i = 0;
-    // Check if starts with log
-    char tmp[4];
-    strncpy(tmp, input, 3);
-    if (strcmp(tmp, "log") != 0)
+    if (input[0] != '(')
+    {
+        printf("Error: Expected '(' at the beginning of parantheses\n");
+        return input;
+    }
+    int i = 1;
+    int paranthesesCount = 1;
+    while (paranthesesCount > 0)
+    {
+        if (input[i] == '(')
+        {
+            paranthesesCount++;
+        }
+        else if (input[i] == ')')
+        {
+            paranthesesCount--;
+        }
+        i++;
+    }
+    char *insideParantheses = (char *)malloc(i);
+    strncpy(insideParantheses, input, i);
+    insideParantheses[i] = '\0';
+    input += i;
+    parseExpression(insideParantheses, e);
+    free(insideParantheses);
+    return input;
+}
+
+char *parseLogarithm(char *input, EVALABLE **e)
+{
+    if (input[0] != 'l' || input[1] != 'o' || input[2] != 'g')
     {
         return input;
     }
     input += 3;
+    if (input[0] != '_')
+    {
+        printf("Error: Expected '_' after 'log'\n");
+        return input;
+    }
+    input++;
     EVALABLE *base;
-    if (input[0] == '_') // Parse base
-    {
-        input++;
-        input = parseExpression(input, &base);
-    }
-    else
-    {
-        base = (EVALABLE *)createConstant(10);
-    }
+    input = parseInsideParantheses(input, &base);
     if (input[0] != '(')
     {
-        printf("Syntax error: Expected '(' after log\n");
-        exit(1);
-    }
-    EVALABLE *value;
-    input = parseExpression(input, &value);
-    if (cofactor == NULL)
-        cofactor = (EVALABLE *)createConstant(1);
-    *log = createLogarithm(cofactor, base, value);
-    return input;
-}
-
-// Create ln function from string
-char *parseLn(char *input, EVALABLE* cofactor, Logarithm **log)
-{
-    int i = 0;
-    if (strcmp(input, "ln") != 0)
-    {
+        printf("Error: Expected '(' after base of logarithm\n");
         return input;
     }
-    input += 2;
-    if (input[0] != '(')
-    {
-        printf("Syntax error: Expected '(' after ln\n");
-        exit(1);
-    }
     EVALABLE *value;
-    input = parseExpression(input, &value);
-    if (cofactor == NULL)
-        cofactor = (EVALABLE *)createConstant(1);
-    *log = createLogarithm(cofactor, (EVALABLE *)createConstant(M_E), value);
+    input = parseInsideParantheses(input, &value);
+    *e = (EVALABLE *)createLogarithm(NULL, base, value);
     return input;
 }
 
-char *parseTrigonometric(char *input, EVALABLE *cofactor, Trigonometric **trig)
+char *parseExpression(char *input, EVALABLE **e)
 {
-    int i = 0;
-    TrigonometricType type;
-    EVALABLE *arg;
-    char tmp[4];
-    strncpy(tmp, input, 3);
-    if (strcmp(tmp, "sin") == 0)
-        type = SIN;
-    else if (strcmp(tmp, "cos") == 0)
-        type = COS;
-    else if (strcmp(tmp, "tan") == 0)
-        type = TAN;
-    else if (strcmp(tmp, "csc") == 0)
-        type = CSC;
-    else if (strcmp(tmp, "sec") == 0)
-        type = SEC;
-    else if (strcmp(tmp, "cot") == 0)
-        type = COT;
-    else
-        return input;
-    input += 3;
-    if (input[0] != '(')
+    Function *f = createFunction();
+    while (input[0])
     {
-        printf("Syntax error: Expected '(' after trigonometric function\n");
-        exit(1);
+        // Check if it is a constant
+        if (input[0] == ' ')
+        {
+            input++;
+            continue;
+        }
+        if (input[0] >= '0' && input[0] <= '9')
+        {
+        }
     }
-    input = parseExpression(input, &arg);
-    if (cofactor == NULL)
-        cofactor = (EVALABLE *)createConstant(1);
-    *trig = createTrigonometric(type, cofactor, arg);
     return input;
-}
-
-char *parseExpression(char *input, EVALABLE **expression)
-{
-    int i = 0;
-    char *start = input;
-    char *end = input;
-
-    // TODO: 
-    // belkide en iyisi önce parantezleri olmayanları çözüp sonra parantezleri çözmek
-    // mesela parantez yoksa toplama çıkarmaları kontrol edeblirim.
-    // parantez işi biraz karışık olabilir.
-  
 }
 
 int main()
@@ -775,34 +745,10 @@ int main()
 
     // Get string input from user and parse it to create a function
 
-    char test[] = "15*log_5(sin(5x))";
-    EVALABLE *e;
-    parseExpression(test, &e);
-    print(e);
+    EVALABLE *f;
+    parseExpression("5*x^2 + 1", &f);
 
-    // f(x) =  x^2 + log_5(9x^2+1)
-    // x=3,31 => f(x) = 13.19
-    Exponential *x92 = createExponential((EVALABLE*)createConstant(9),(EVALABLE*)createVariable(NULL), (EVALABLE*)createConstant(2));
-    Constant *arti1 = createConstant(1);
-    Function *ic = createFunction();
-    addFunctionArg(ic, (EVALABLE*)x92);
-    addFunctionArg(ic, (EVALABLE*)arti1);
-
-    Logarithm *log = createLogarithm(NULL, (EVALABLE*)createConstant(5), (EVALABLE*)ic);
-
-    Exponential *xkare = createExponential(NULL, (EVALABLE*)createVariable(NULL), (EVALABLE*)createConstant(2));
-
-    Function *fson = createFunction();
-    addFunctionArg(fson, (EVALABLE*)log);
-    addFunctionArg(fson, (EVALABLE*)xkare);
-
-    print((EVALABLE*)fson);
-    printf("(f(3,31) = %Lf\n", evaluate((EVALABLE*)fson, 3.31)); // 13.81
-    return 0;
-
-    // Solve the function
-    double result = evaluate(e, 25);
-    printf("\nResult: %Lf\n", result);
+    print(f);
 
     return 0;
 }
