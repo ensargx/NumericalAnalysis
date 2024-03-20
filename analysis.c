@@ -780,6 +780,26 @@ int main()
     parseExpression(test, &e);
     print(e);
 
+    // f(x) =  x^2 + log_5(9x^2+1)
+    // x=3,31 => f(x) = 13.19
+    Exponential *x92 = createExponential((EVALABLE*)createConstant(9),(EVALABLE*)createVariable(NULL), (EVALABLE*)createConstant(2));
+    Constant *arti1 = createConstant(1);
+    Function *ic = createFunction();
+    addFunctionArg(ic, (EVALABLE*)x92);
+    addFunctionArg(ic, (EVALABLE*)arti1);
+
+    Logarithm *log = createLogarithm(NULL, (EVALABLE*)createConstant(5), (EVALABLE*)ic);
+
+    Exponential *xkare = createExponential(NULL, (EVALABLE*)createVariable(NULL), (EVALABLE*)createConstant(2));
+
+    Function *fson = createFunction();
+    addFunctionArg(fson, (EVALABLE*)log);
+    addFunctionArg(fson, (EVALABLE*)xkare);
+
+    print((EVALABLE*)fson);
+    printf("(f(3,31) = %Lf\n", evaluate((EVALABLE*)fson, 3.31)); // 13.81
+    return 0;
+
     // Solve the function
     double result = evaluate(e, 25);
     printf("\nResult: %Lf\n", result);
