@@ -958,6 +958,12 @@ int main()
     result = evaluate(f, 3);
     printf("Result: %Lf\n", result);
 
+    printf("-----------------\n");
+    parseExpression("x^(sin(log_(5)(x^(3))))", &f);
+    print(f);
+    printf("\n");
+    result = evaluate(f, 3);
+    printf("Result: %Lf\n", result);
 
     return 0;
 }
