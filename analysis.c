@@ -665,6 +665,55 @@ double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon)
 char *parseExpression(char *input, EVALABLE **e);
 char *parseLogarithm(char *input, EVALABLE **e);
 char *parseInsideParantheses(char *input, EVALABLE **e);
+char *parseTrigonometric(char *input, EVALABLE **e);
+
+
+char *parseTrigonometric(char *input, EVALABLE **e)
+{
+    if (strncmp(input, "sin", 3) == 0)
+    {
+        input += 3;
+        EVALABLE *arg;
+        input = parseInsideParantheses(input, &arg);
+        *e = (EVALABLE *)createTrigonometric(SIN, NULL, arg);
+    }
+    else if (strncmp(input, "cos", 3) == 0)
+    {
+        input += 3;
+        EVALABLE *arg;
+        input = parseInsideParantheses(input, &arg);
+        *e = (EVALABLE *)createTrigonometric(COS, NULL, arg);
+    }
+    else if (strncmp(input, "tan", 3) == 0)
+    {
+        input += 3;
+        EVALABLE *arg;
+        input = parseInsideParantheses(input, &arg);
+        *e = (EVALABLE *)createTrigonometric(TAN, NULL, arg);
+    }
+    else if (strncmp(input, "csc", 3) == 0)
+    {
+        input += 3;
+        EVALABLE *arg;
+        input = parseInsideParantheses(input, &arg);
+        *e = (EVALABLE *)createTrigonometric(CSC, NULL, arg);
+    }
+    else if (strncmp(input, "sec", 3) == 0)
+    {
+        input += 3;
+        EVALABLE *arg;
+        input = parseInsideParantheses(input, &arg);
+        *e = (EVALABLE *)createTrigonometric(SEC, NULL, arg);
+    }
+    else if (strncmp(input, "cot", 3) == 0)
+    {
+        input += 3;
+        EVALABLE *arg;
+        input = parseInsideParantheses(input, &arg);
+        *e = (EVALABLE *)createTrigonometric(COT, NULL, arg);
+    }
+    return input;
+}
 
 char *parseInsideParantheses(char *input, EVALABLE **e)
 {
@@ -688,9 +737,10 @@ char *parseInsideParantheses(char *input, EVALABLE **e)
         i++;
     }
     char *insideParantheses = (char *)malloc(i);
-    strncpy(insideParantheses, input, i);
+    strncpy(insideParantheses, input+1, i-2);
     insideParantheses[i] = '\0';
     input += i;
+    printf("Inside parantheses: %s\n", insideParantheses);
     parseExpression(insideParantheses, e);
     free(insideParantheses);
     return input;
@@ -698,6 +748,7 @@ char *parseInsideParantheses(char *input, EVALABLE **e)
 
 char *parseLogarithm(char *input, EVALABLE **e)
 {
+    printf("Parsing logarithm\n");
     if (input[0] != 'l' || input[1] != 'o' || input[2] != 'g')
     {
         return input;
@@ -725,6 +776,16 @@ char *parseLogarithm(char *input, EVALABLE **e)
 char *parseExpression(char *input, EVALABLE **e)
 {
     Function *f = createFunction();
+    double coefficient = 1;
+    int sign = 1;
+    int state = 0;
+    // 0: Start
+    // 1: Coefficient
+    // 2: Variable
+    // 3: Exponential
+    // 4: Logarithm
+    // 5: Trigonometric
+    // 6: Inverse Trigonometric
     while (input[0])
     {
         // Check if it is a constant
@@ -733,10 +794,78 @@ char *parseExpression(char *input, EVALABLE **e)
             input++;
             continue;
         }
+        if (strncmp(input, "log", 3) == 0)
+        {
+            input = parseLogarithm(input, e);
+            // add coeeficient to e 
+            ((Logarithm *)*e)->cofactor = (EVALABLE *)createConstant(coefficient);
+            addFunctionArg(f, *e);
+        }
+        if (strncmp(input, "sin", 3) == 0 || strncmp(input, "cos", 3) == 0 || strncmp(input, "tan", 3) == 0 || strncmp(input, "csc", 3) == 0 || strncmp(input, "sec", 3) == 0 || strncmp(input, "cot", 3) == 0)
+        {
+            input = parseTrigonometric(input, e);
+            addFunctionArg(f, *e);
+        }
         if (input[0] >= '0' && input[0] <= '9')
         {
+            coefficient = 0;
+            state = 1;
+            while (input[0] >= '0' && input[0] <= '9')
+            {
+                coefficient = coefficient * 10 + (input[0] - '0');
+                input++;
+            }
+            if (input[0] == '.')
+            {
+                input++;
+                while (input[0] >= '0' && input[0] <= '9')
+                {
+                    coefficient = coefficient + (double)(input[0] - '0') / 10;
+                    input++;
+                }
+            }
+            printf("Coefficient: %Lf\n", coefficient);
+            if (input[0] != '*')
+            {
+                addFunctionArg(f, (EVALABLE *)createConstant(coefficient));
+                coefficient = 1;
+            }
+            else
+            {
+                input++;
+            }
+        }
+        if (input[0] == 'x')
+        {
+            state = 2;
+            input++;
+            if (input[0] == '^')
+            {
+                input++;
+                EVALABLE *exponent;
+                input = parseInsideParantheses(input, &exponent);
+                addFunctionArg(f, (EVALABLE *)createExponential((EVALABLE *)createConstant(coefficient), (EVALABLE *)createVariable(NULL), exponent));
+                coefficient = 1;
+            }
+            else
+            {
+                addFunctionArg(f, (EVALABLE *)createVariable((EVALABLE *)createConstant(coefficient)));
+                coefficient = 1;
+            }
+        }
+        if (input[0] == '+')
+        {
+            input++;
+            continue;
+        }
+        if (input[0] == '-')
+        {
+            sign = -1;
+            input++;
+            continue;
         }
     }
+    *e = (EVALABLE *)f;
     return input;
 }
 
@@ -746,9 +875,11 @@ int main()
     // Get string input from user and parse it to create a function
 
     EVALABLE *f;
-    parseExpression("5*x^2 + 1", &f);
-
+    parseExpression("2*log_(10)(sin(x+1))", &f);
+    double result = evaluate(f, 1);
     print(f);
+    printf("\n");
+    printf("Result: %Lf\n", result);
 
     return 0;
 }
