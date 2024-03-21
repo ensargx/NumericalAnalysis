@@ -919,6 +919,13 @@ int main()
     printf("\n");
     printf("Result: %Lf\n", result);
 
+    printf("-----------------\n");
+    parseExpression("log_(x)(sin(5*x^(2)+sin(5*x)))", &f);
+    print(f);
+    printf("\n");
+    result = evaluate(f, 3);
+    printf("Result: %Lf\n", result);
+
     return 0;
 }
 
