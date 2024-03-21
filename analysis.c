@@ -780,12 +780,6 @@ char *parseExpression(char *input, EVALABLE **e)
     int sign = 1;
     int state = 0;
     // 0: Start
-    // 1: Coefficient
-    // 2: Variable
-    // 3: Exponential
-    // 4: Logarithm
-    // 5: Trigonometric
-    // 6: Inverse Trigonometric
     while (input[0])
     {
         // Check if it is a constant
@@ -798,6 +792,10 @@ char *parseExpression(char *input, EVALABLE **e)
         {
             input = parseLogarithm(input, e);
             // add coeeficient to e 
+            if (sign == -1)
+            {
+                coefficient *= -1;
+            }
             ((Logarithm *)*e)->cofactor = (EVALABLE *)createConstant(coefficient);
             addFunctionArg(f, *e);
         }
@@ -805,6 +803,37 @@ char *parseExpression(char *input, EVALABLE **e)
         {
             input = parseTrigonometric(input, e);
             addFunctionArg(f, *e);
+        }
+        if (input[0] == '(')
+        {
+            EVALABLE *insideParantheses;
+            input = parseInsideParantheses(input, &insideParantheses);
+            addFunctionArg(f, insideParantheses);
+            if (input[0] != '*')
+            {
+                if (state != 0)
+                {
+                    if (sign == -1)
+                    {
+                        coefficient *= -1;
+                    }
+                    addFunctionArg(f, (EVALABLE *)createConstant(coefficient));
+                    coefficient = 1;
+                }
+            }
+            else if (input[0] == '^')
+            {
+                input++;
+                EVALABLE *exponent;
+                input = parseInsideParantheses(input, &exponent);
+                addFunctionArg(f, (EVALABLE *)createExponential((EVALABLE *)createConstant(coefficient), insideParantheses, exponent));
+                coefficient = 1;
+            }
+            else
+            {
+                input++;
+            }
+            state = 0;
         }
         if (input[0] >= '0' && input[0] <= '9')
         {
@@ -827,6 +856,10 @@ char *parseExpression(char *input, EVALABLE **e)
             printf("Coefficient: %Lf\n", coefficient);
             if (input[0] != '*')
             {
+                if (sign == -1)
+                {
+                    coefficient *= -1;
+                }
                 addFunctionArg(f, (EVALABLE *)createConstant(coefficient));
                 coefficient = 1;
             }
@@ -844,11 +877,19 @@ char *parseExpression(char *input, EVALABLE **e)
                 input++;
                 EVALABLE *exponent;
                 input = parseInsideParantheses(input, &exponent);
+                if (sign == -1)
+                {
+                    coefficient *= -1;
+                }
                 addFunctionArg(f, (EVALABLE *)createExponential((EVALABLE *)createConstant(coefficient), (EVALABLE *)createVariable(NULL), exponent));
                 coefficient = 1;
             }
             else
             {
+                if (sign == -1)
+                {
+                    coefficient *= -1;
+                }
                 addFunctionArg(f, (EVALABLE *)createVariable((EVALABLE *)createConstant(coefficient)));
                 coefficient = 1;
             }
@@ -871,12 +912,9 @@ char *parseExpression(char *input, EVALABLE **e)
 
 int main()
 {
-
-    // Get string input from user and parse it to create a function
-
     EVALABLE *f;
-    parseExpression("2*log_(10)(sin(x+1))", &f);
-    double result = evaluate(f, 1);
+    parseExpression("2*log_(10)(sin(5*x))-x", &f);
+    double result = evaluate(f, 9);
     print(f);
     printf("\n");
     printf("Result: %Lf\n", result);
