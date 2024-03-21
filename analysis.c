@@ -894,6 +894,31 @@ char *parseExpression(char *input, EVALABLE **e)
                 coefficient = 1;
             }
         }
+        if (input[0] == 'e')
+        {
+            input++;
+            if (input[0] == '^')
+            {
+                input++;
+                EVALABLE *exponent;
+                input = parseInsideParantheses(input, &exponent);
+                if (sign == -1)
+                {
+                    coefficient *= -1;
+                }
+                addFunctionArg(f, (EVALABLE *)createExponential((EVALABLE *)createConstant(coefficient), (EVALABLE *)createConstant(M_E), exponent));
+                coefficient = 1;
+            }
+            else
+            {
+                if (sign == -1)
+                {
+                    coefficient *= -1;
+                }
+                addFunctionArg(f, (EVALABLE *)createConstant(coefficient * M_E));
+                coefficient = 1;
+            }
+        }
         if (input[0] == '+')
         {
             input++;
@@ -925,6 +950,14 @@ int main()
     printf("\n");
     result = evaluate(f, 3);
     printf("Result: %Lf\n", result);
+
+    printf("-----------------\n");
+    parseExpression("x^(e^(5*x))", &f);
+    print(f);
+    printf("\n");
+    result = evaluate(f, 3);
+    printf("Result: %Lf\n", result);
+
 
     return 0;
 }
