@@ -1025,6 +1025,8 @@ char *parseExpression(char *input, EVALABLE **e)
     printf("SumChain after: ");
     print((EVALABLE *)f);
     printf("\n");
+    printf("Mulchain length: %d\n", m->argCount);
+    printf("Sumchain length: %d\n", f->argCount);
     EVALABLE *result;
     if (f->argCount == 1)
     {
@@ -1035,6 +1037,7 @@ char *parseExpression(char *input, EVALABLE **e)
     {
         result = (EVALABLE *)f;
     }
+
     *e = result;
     return input;
 }
@@ -1054,6 +1057,36 @@ int main()
     scanf("%Lf", &value);
     double result = evaluate(f, value);
     printf("Result: %Lf\n", result);
+    
+    printf("Type: ");
+    switch (EVALTYPE(f))
+    {
+        case CONSTANT:
+            printf("Constant\n");
+            break;
+        case VARIABLE:
+            printf("Variable\n");
+            break;
+        case EXPONENTIAL:
+            printf("Exponential\n");
+            break;
+        case TRIGONOMETRIC:
+            printf("Trigonometric\n");
+            break;
+        case INVERSE_TRIGONOMETRIC:
+            printf("Inverse Trigonometric\n");
+            break;
+        case LOGARITHM:
+            printf("Logarithm\n");
+            break;
+        case SUM_CHAIN:
+            printf("Sum Chain\n");
+            break;
+        case MUL_CHAIN:
+            printf("Mul Chain\n");
+            break;
+    }
+
     destroy(f);
 
     return 0;
