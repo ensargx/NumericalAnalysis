@@ -785,48 +785,59 @@ char *parseTrigonometric(char *input, EVALABLE **e);
 
 char *parseTrigonometric(char *input, EVALABLE **e)
 {
+    TrigonometricType type;
     if (strncmp(input, "sin", 3) == 0)
-    {
-        input += 3;
-        EVALABLE *arg;
-        input = parseInsideParantheses(input, &arg);
-        *e = (EVALABLE *)createTrigonometric(SIN, arg);
-    }
+        type = SIN;
     else if (strncmp(input, "cos", 3) == 0)
-    {
-        input += 3;
-        EVALABLE *arg;
-        input = parseInsideParantheses(input, &arg);
-        *e = (EVALABLE *)createTrigonometric(COS, arg);
-    }
+        type = COS;
     else if (strncmp(input, "tan", 3) == 0)
-    {
-        input += 3;
-        EVALABLE *arg;
-        input = parseInsideParantheses(input, &arg);
-        *e = (EVALABLE *)createTrigonometric(TAN, arg);
-    }
+        type = TAN;
     else if (strncmp(input, "csc", 3) == 0)
-    {
-        input += 3;
-        EVALABLE *arg;
-        input = parseInsideParantheses(input, &arg);
-        *e = (EVALABLE *)createTrigonometric(CSC, arg);
-    }
+        type = CSC;
     else if (strncmp(input, "sec", 3) == 0)
-    {
-        input += 3;
-        EVALABLE *arg;
-        input = parseInsideParantheses(input, &arg);
-        *e = (EVALABLE *)createTrigonometric(SEC, arg);
-    }
+        type = SEC;
     else if (strncmp(input, "cot", 3) == 0)
+        type = COT;
+    else
+        return input;
+    input += 3;
+    if (input[0] != '(')
     {
-        input += 3;
-        EVALABLE *arg;
-        input = parseInsideParantheses(input, &arg);
-        *e = (EVALABLE *)createTrigonometric(COT, arg);
+        printf("Error: Expected '(' after trigonometric function\n");
+        return input;
     }
+    EVALABLE *arg;
+    input = parseInsideParantheses(input, &arg);
+    *e = (EVALABLE *)createTrigonometric(type, arg);
+    return input;
+}
+
+char *parseInverseTrigonometric(char *input, EVALABLE **e)
+{
+    InverseTrigonometricType type;
+    if (strncmp(input, "asin", 4) == 0)
+        type = ASIN;
+    else if (strncmp(input, "acos", 4) == 0)
+        type = ACOS;
+    else if (strncmp(input, "atan", 4) == 0)
+        type = ATAN;
+    else if (strncmp(input, "acsc", 4) == 0)
+        type = ACSC;
+    else if (strncmp(input, "asec", 4) == 0)
+        type = ASEC;
+    else if (strncmp(input, "acot", 4) == 0)
+        type = ACOT;
+    else
+        return input;
+    input += 4;
+    if (input[0] != '(')
+    {
+        printf("Error: Expected '(' after inverse trigonometric function\n");
+        return input;
+    }
+    EVALABLE *arg;
+    input = parseInsideParantheses(input, &arg);
+    *e = (EVALABLE *)createInverseTrigonometric(type, arg);
     return input;
 }
 
@@ -909,9 +920,25 @@ char *parseExpression(char *input, EVALABLE **e)
         {
             input = parseLogarithm(input, &arg);
         }
-        else if (strncmp(input, "sin", 3) == 0 || strncmp(input, "cos", 3) == 0 || strncmp(input, "tan", 3) == 0 || strncmp(input, "csc", 3) == 0 || strncmp(input, "sec", 3) == 0 || strncmp(input, "cot", 3) == 0)
+        else if (
+            strncmp(input, "sin", 3) == 0 || 
+            strncmp(input, "cos", 3) == 0 || 
+            strncmp(input, "tan", 3) == 0 || 
+            strncmp(input, "csc", 3) == 0 || 
+            strncmp(input, "sec", 3) == 0 || 
+            strncmp(input, "cot", 3) == 0)
         {
             input = parseTrigonometric(input, &arg);
+        }
+        else if (
+            strncmp(input, "asin", 4) == 0 ||
+            strncmp(input, "acos", 4) == 0 ||
+            strncmp(input, "atan", 4) == 0 ||
+            strncmp(input, "acsc", 4) == 0 ||
+            strncmp(input, "asec", 4) == 0 ||
+            strncmp(input, "acot", 4) == 0)
+        {
+            input = parseInverseTrigonometric(input, &arg);
         }
         else if (input[0] == '(')
         {
