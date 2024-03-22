@@ -932,6 +932,19 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
         {
             input = parseLogarithm(input, &arg, s);
         }
+        else if (strncmp(input, "ln", 2) == 0)
+        {
+            input += 2;
+            if (input[0] != '(')
+            {
+                s->code = 2;
+                s->expected = '(';
+                s->pos = input;
+                return input;
+            }
+            input = parseInsideParantheses(input, &arg, s);
+            arg = (EVALABLE *)createLogarithm((EVALABLE *)createConstant(M_E), arg);
+        }
         else if (
             strncmp(input, "sin", 3) == 0 || 
             strncmp(input, "cos", 3) == 0 || 
