@@ -22,6 +22,7 @@ typedef enum _EvalAbleType {
     CONSTANT,
     VARIABLE,
     FUNCTION,
+    MUL_CHAIN,
     LOGARITHM,
     EXPONENTIAL,
     TRIGONOMETRIC,
@@ -32,6 +33,7 @@ typedef enum _EvalAbleType {
 typedef struct _Constant Constant;
 typedef struct _Variable Variable;
 typedef struct _Function Function;
+typedef struct _MulChain MulChain;
 typedef struct _Exponential Exponential;
 typedef struct _Logarithm Logarithm;
 typedef struct _Trigonometric Trigonometric;
@@ -59,18 +61,24 @@ typedef struct _Constant {
 
 typedef struct _Variable {
     EvalAbleType type;
-    EVALABLE *cofactor;
 } Variable;
 
 typedef struct _Function {
     EvalAbleType type;
     int argCount;
-    EVALABLE *args[256];
+    EVALABLE *args[MAX_FUNC_ARGS];
+    int isPositive[MAX_FUNC_ARGS];
 } Function;
+
+typedef struct _MulChain {
+    EvalAbleType type;
+    int argCount;
+    EVALABLE *args[MAX_FUNC_ARGS];
+    int isDivided[MAX_FUNC_ARGS];
+} MulChain;
 
 typedef struct _Exponential {
     EvalAbleType type;
-    EVALABLE *cofactor;
     EVALABLE *base;
     EVALABLE *exponent;
 } Exponential;
@@ -87,7 +95,6 @@ typedef enum _TrigonometricType {
 typedef struct _Trigonometric {
     EvalAbleType type;
     TrigonometricType trigType;
-    EVALABLE *cofactor;
     EVALABLE *arg;
 } Trigonometric;
 
@@ -103,19 +110,17 @@ typedef enum _InverseTrigonometricType {
 typedef struct _InverseTrigonometric {
     EvalAbleType type;
     InverseTrigonometricType trigType;
-    EVALABLE *cofactor;
     EVALABLE *arg;
 } InverseTrigonometric;
 
 typedef struct _Logarithm {
     EvalAbleType type;
-    EVALABLE *cofactor;
     EVALABLE *base;
     EVALABLE *value;
 } Logarithm;
 
 /* Function prototypes */
-Variable *createVariable(EVALABLE *cofactor);
+Variable *createVariable();
 void destroyVariable(Variable *v);
 double evaluateVariable(Variable *v, double value);
 EVALABLE *deriveVariable(Variable *v);
@@ -127,32 +132,39 @@ double evaluateConstant(Constant *c, double value);
 EVALABLE *deriveConstant(Constant *c);
 void printConstant(Constant *c);
 
-Exponential *createExponential(EVALABLE *cofactor, EVALABLE *base, EVALABLE *exponent);
+Exponential *createExponential(EVALABLE *base, EVALABLE *exponent);
 void destroyExponential(Exponential *e);
 double evaluateExponential(Exponential *e, double value);
 EVALABLE *deriveExponential(Exponential *e);    
 void printExponential(Exponential *e);
 
-Logarithm *createLogarithm(EVALABLE *cofactor, EVALABLE *base, EVALABLE *value);
+Logarithm *createLogarithm(EVALABLE *base, EVALABLE *value);
 void destroyLogarithm(Logarithm *l);
 double evaluateLogarithm(Logarithm *l, double value);
 EVALABLE *deriveLogarithm(Logarithm *l);
 void printLogarithm(Logarithm *l);
 
 Function *createFunction();
-void addFunctionArg(Function *f, EVALABLE *argType);
+void addFunctionArg(Function *f, EVALABLE *argType, int sign);
 void destroyFunction(Function *f);
 double evaluateFunction(Function *f, double value);
 EVALABLE *deriveFunction(Function *f);
 void printFunction(Function *f);
 
-Trigonometric *createTrigonometric(TrigonometricType type, EVALABLE *cofactor, EVALABLE *arg);
+MulChain *createMulChain();
+void addMulChainArg(MulChain *m, EVALABLE *arg, int isDivided);
+void destroyMulChain(MulChain *m);
+double evaluateMulChain(MulChain *m, double value);
+EVALABLE *deriveMulChain(MulChain *m);
+void printMulChain(MulChain *m);
+
+Trigonometric *createTrigonometric(TrigonometricType type, EVALABLE *arg);
 void destroyTrigonometric(Trigonometric *t);
 double evaluateTrigonometric(Trigonometric *t, double value);
 EVALABLE *deriveTrigonometric(Trigonometric *t);
 void printTrigonometric(Trigonometric *t);
 
-InverseTrigonometric *createInverseTrigonometric(InverseTrigonometricType type, EVALABLE *cofactor, EVALABLE *arg);
+InverseTrigonometric *createInverseTrigonometric(InverseTrigonometricType type, EVALABLE *arg);
 void destroyInverseTrigonometric(InverseTrigonometric *it);
 double evaluateInverseTrigonometric(InverseTrigonometric *it, double value);
 EVALABLE *deriveInverseTrigonometric(InverseTrigonometric *it);
@@ -166,43 +178,83 @@ void print(EVALABLE *e);
 /* Function implementations */
 
 // Variable functions
-Variable *createVariable(EVALABLE *cofactor) {
+Variable *createVariable()
+{
     Variable *v = (Variable *)malloc(sizeof(Variable));
     v->type = VARIABLE;
-    if (cofactor == NULL) {
-        cofactor = (EVALABLE *)createConstant(1);
-    }
-    v->cofactor = cofactor;
     return v;
 }
 
 void destroyVariable(Variable *v) {
-    destroy(v->cofactor);
     free(v);
 }
 
 double evaluateVariable(Variable *v, double value) {
-    return evaluate(v->cofactor, value) * value;
+    return value;
 }
 
 EVALABLE *deriveVariable(Variable *v) {
     // (EVALABLE)*x
-    EvalAbleType type = checkType(v->cofactor);
-    if (type == CONSTANT) {
-        Constant *c = (Constant *)v->cofactor;
-        return (EVALABLE *)createConstant(c->value);
-    } 
-    EVALABLE *derivedCofactor = derive(v->cofactor);
     Function *f = createFunction();
-    addFunctionArg(f, (EVALABLE *)derivedCofactor);
-    addFunctionArg(f, (EVALABLE *)createConstant(1));
+    addFunctionArg(f, (EVALABLE *)createConstant(1), 1);
     return (EVALABLE *)f;
 }
 
 void printVariable(Variable *v) {
-    printf("(");
-    print(v->cofactor);
-    printf(")x");
+    printf("(x)");
+}
+
+// MulChain functions
+MulChain *createMulChain() {
+    MulChain *m = (MulChain *)malloc(sizeof(MulChain));
+    m->type = MUL_CHAIN;
+    m->argCount = 0;
+    for (int i = 0; i < MAX_FUNC_ARGS; i++) {
+        m->args[i] = NULL;
+        m->isDivided[i] = 0;
+    }
+    return m;
+}
+
+void addMulChainArg(MulChain *m, EVALABLE *arg, int isDivided) {
+    m->args[m->argCount++] = arg;
+    m->isDivided[m->argCount] = isDivided;
+}
+
+void destroyMulChain(MulChain *m) {
+    for (int i = 0; i < m->argCount && m->args[i] != NULL; i++) {
+        destroy(m->args[i]);
+    }
+    free(m);
+}
+
+double evaluateMulChain(MulChain *m, double value) {
+    double result = 1;
+    for (int i = 0; i < m->argCount && m->args[i] != NULL; i++) {
+        if (m->isDivided[i] == 1) {
+            result /= evaluate(m->args[i], value);
+        } else {
+            result *= evaluate(m->args[i], value);
+        }
+    }
+    return result;
+}
+
+EVALABLE *deriveMulChain(MulChain *m) {
+    return NULL;
+}
+
+void printMulChain(MulChain *m) {
+    for (int i = 0; i < m->argCount && m->args[i] != NULL; i++) {
+        print(m->args[i]);
+        if (i < m->argCount - 1 && m->args[i + 1] != NULL) {
+            if (m->isDivided[i + 1] == 1) {
+                printf(" / ");
+            } else {
+                printf(" * ");
+            }
+        }
+    }
 }
 
 // Constant functions
@@ -230,13 +282,9 @@ void printConstant(Constant *c) {
 }
 
 // Exponential functions
-Exponential *createExponential(EVALABLE *cofactor, EVALABLE *base, EVALABLE *exponent) {
+Exponential *createExponential(EVALABLE *base, EVALABLE *exponent) {
     Exponential *e = (Exponential *)malloc(sizeof(Exponential));
     e->type = EXPONENTIAL;
-    if (cofactor == NULL) {
-        cofactor = (EVALABLE *)createConstant(1);
-    }
-    e->cofactor = cofactor;
     if (base == NULL) {
         base = (EVALABLE *)createConstant(1);
     }
@@ -253,43 +301,27 @@ void destroyExponential(Exponential *e) {
 }
 
 double evaluateExponential(Exponential *e, double value) {
-    return evaluate(e->cofactor, value) * pow(evaluate(e->base, value), evaluate(e->exponent, value));
+    return pow(evaluate(e->base, value), evaluate(e->exponent, value));
 }
 
 EVALABLE *deriveExponential(Exponential *e) 
 {
     // (EVALABLE)*x
-    EvalAbleType type = checkType(e->cofactor);
-    if (type == CONSTANT) {
-        Constant *c = (Constant *)e->cofactor;
-        return (EVALABLE *)createConstant(c->value);
-    }
-    EVALABLE *derivedCofactor = derive(e->cofactor);
     Function *f = createFunction();
-    addFunctionArg(f, (EVALABLE *)derivedCofactor);
-    addFunctionArg(f, (EVALABLE *)createExponential(NULL, e->base, e->exponent));
     return (EVALABLE *)f;
 }
 
 void printExponential(Exponential *e) {
-    printf("(");
-    print(e->cofactor);
-    printf(")(");
     print(e->base);
-    printf(")^(");
+    printf("^");
     print(e->exponent);
-    printf(")");
 }
 
 // Trigonometric functions
 
-Trigonometric *createTrigonometric(TrigonometricType type, EVALABLE *cofactor, EVALABLE *arg) {
+Trigonometric *createTrigonometric(TrigonometricType type, EVALABLE *arg) {
     Trigonometric *t = (Trigonometric *)malloc(sizeof(Trigonometric));
     t->type = TRIGONOMETRIC;
-    if (cofactor == NULL) {
-        cofactor = (EVALABLE *)createConstant(1);
-    }
-    t->cofactor = cofactor;
     if (arg == NULL) {
         arg = (EVALABLE *)createConstant(1);
     }
@@ -298,7 +330,6 @@ Trigonometric *createTrigonometric(TrigonometricType type, EVALABLE *cofactor, E
 }
 
 void destroyTrigonometric(Trigonometric *t) {
-    destroy(t->cofactor);
     destroy(t->arg);
     free(t);
 }
@@ -306,17 +337,17 @@ void destroyTrigonometric(Trigonometric *t) {
 double evaluateTrigonometric(Trigonometric *t, double value) {
     switch (t->trigType) {
         case SIN:
-            return evaluate(t->cofactor, value) * sin(evaluate(t->arg, value));
+            return sin(evaluate(t->arg, value));
         case COS:
-            return evaluate(t->cofactor, value) * cos(evaluate(t->arg, value));
+            return cos(evaluate(t->arg, value));
         case TAN:
-            return evaluate(t->cofactor, value) * tan(evaluate(t->arg, value));
+            return tan(evaluate(t->arg, value));
         case CSC:
-            return evaluate(t->cofactor, value) * 1 / sin(evaluate(t->arg, value));
+            return 1 / sin(evaluate(t->arg, value));
         case SEC:
-            return evaluate(t->cofactor, value) * 1 / cos(evaluate(t->arg, value));
+            return 1 / cos(evaluate(t->arg, value));
         case COT:
-            return evaluate(t->cofactor, value) * 1 / tan(evaluate(t->arg, value));
+            return 1 / tan(evaluate(t->arg, value));
     }
 }
 
@@ -351,13 +382,9 @@ void printTrigonometric(Trigonometric *t) {
 
 // Inverse Trigonometric functions
 
-InverseTrigonometric *createInverseTrigonometric(InverseTrigonometricType type, EVALABLE *cofactor, EVALABLE *arg) {
+InverseTrigonometric *createInverseTrigonometric(InverseTrigonometricType type, EVALABLE *arg) {
     InverseTrigonometric *it = (InverseTrigonometric *)malloc(sizeof(InverseTrigonometric));
     it->type = INVERSE_TRIGONOMETRIC;
-    if (cofactor == NULL) {
-        cofactor = (EVALABLE *)createConstant(1);
-    }
-    it->cofactor = cofactor;
     if (arg == NULL) {
         arg = (EVALABLE *)createConstant(1);
     }
@@ -366,7 +393,6 @@ InverseTrigonometric *createInverseTrigonometric(InverseTrigonometricType type, 
 }
 
 void destroyInverseTrigonometric(InverseTrigonometric *it) {
-    destroy(it->cofactor);
     destroy(it->arg);
     free(it);
 }
@@ -374,17 +400,17 @@ void destroyInverseTrigonometric(InverseTrigonometric *it) {
 double evaluateInverseTrigonometric(InverseTrigonometric *it, double value) {
     switch (it->trigType) {
         case ASIN:
-            return evaluate(it->cofactor, value) * asin(evaluate(it->arg, value));
+            return asin(evaluate(it->arg, value));
         case ACOS:
-            return evaluate(it->cofactor, value) * acos(evaluate(it->arg, value));
+            return acos(evaluate(it->arg, value));
         case ATAN:
-            return evaluate(it->cofactor, value) * atan(evaluate(it->arg, value));
+            return atan(evaluate(it->arg, value));
         case ACSC:
-            return evaluate(it->cofactor, value) * asin(1 / evaluate(it->arg, value));
+            return asin(1 / evaluate(it->arg, value));
         case ASEC:
-            return evaluate(it->cofactor, value) * acos(1 / evaluate(it->arg, value));
+            return acos(1 / evaluate(it->arg, value));
         case ACOT:
-            return evaluate(it->cofactor, value) * atan(1 / evaluate(it->arg, value));
+            return atan(1 / evaluate(it->arg, value));
     }
 }
 
@@ -419,13 +445,9 @@ void printInverseTrigonometric(InverseTrigonometric *it) {
 
 // Logarithm functions
 
-Logarithm *createLogarithm(EVALABLE *cofactor, EVALABLE *base, EVALABLE *value) {
+Logarithm *createLogarithm(EVALABLE *base, EVALABLE *value) {
     Logarithm *l = (Logarithm *)malloc(sizeof(Logarithm));
     l->type = LOGARITHM;
-    if (cofactor == NULL) {
-        cofactor = (EVALABLE *)createConstant(1);
-    }
-    l->cofactor = cofactor;
     if (base == NULL) {
         base = (EVALABLE *)createConstant(10);
     }
@@ -438,7 +460,6 @@ Logarithm *createLogarithm(EVALABLE *cofactor, EVALABLE *base, EVALABLE *value) 
 }
 
 void destroyLogarithm(Logarithm *l) {
-    destroy(l->cofactor);
     destroy(l->base);
     destroy(l->value);
     free(l);
@@ -447,7 +468,7 @@ void destroyLogarithm(Logarithm *l) {
 double evaluateLogarithm(Logarithm *l, double value) {
     // printf("[DEBUG]: evaluateLogarithm: Check implementation & test\n");
     // log_b(a) = log(a) / log(b) 
-    return evaluate(l->cofactor, value) * log(evaluate(l->value, value)) / log(evaluate(l->base, value));
+    return log(evaluate(l->value, value)) / log(evaluate(l->base, value));
 }
 
 EVALABLE *deriveLogarithm(Logarithm *l) {
@@ -455,9 +476,7 @@ EVALABLE *deriveLogarithm(Logarithm *l) {
 }
 
 void printLogarithm(Logarithm *l) {
-    printf("(");
-    print(l->cofactor);
-    printf(")log_");
+    printf("log_");
     print(l->base);
     printf("(");
     print(l->value);
@@ -476,8 +495,10 @@ Function *createFunction() {
     return f;
 }
 
-void addFunctionArg(Function *f, EVALABLE *arg) {
-    f->args[f->argCount++] = arg;
+void addFunctionArg(Function *f, EVALABLE *arg, int isPositive)
+{
+    f->args[f->argCount] = arg;
+    f->isPositive[f->argCount++] = isPositive;
 }
 
 void destroyFunction(Function *f) {
@@ -487,7 +508,11 @@ void destroyFunction(Function *f) {
 double evaluateFunction(Function *f, double value) {
     double result = 0;
     for (int i = 0; i < f->argCount && f->args[i] != NULL; i++) {
-        result += evaluate((EVALABLE *)f->args[i], value);
+        if (f->isPositive[i] == 1) {
+            result += evaluate((EVALABLE *)f->args[i], value);
+        } else {
+            result -= evaluate((EVALABLE *)f->args[i], value);
+        }
     }
     return result;
 }
@@ -495,20 +520,24 @@ double evaluateFunction(Function *f, double value) {
 EVALABLE *deriveFunction(Function *f) {
     Function *df = createFunction();
     for (int i = 0; i < f->argCount && f->args[i] != NULL; i++) {
-        addFunctionArg(df, derive((EVALABLE *)f->args[i]));
+        addFunctionArg(df, derive((EVALABLE *)f->args[i]), f->isPositive[i]);
     }
     return (EVALABLE *)df;
 }
 
-void printFunction(Function *f) {
-    printf("(");
-    for (int i = 0; i < f->argCount && f->args[i] != NULL; i++) {
-        print((EVALABLE *)f->args[i]);
-        if (i < f->argCount - 1 && f->args[i + 1] != NULL) {
-            printf(" + ");
+void printFunction(Function *f)
+{
+    for (int i = 0; i < f->argCount && f->args[i] != NULL; i++)
+    {
+        if (f->isPositive[i] == 1)
+        {
+            printf("+");
+        } else
+        {
+            printf("-");
         }
+        print(f->args[i]);
     }
-    printf(")");
 }
 
 // Main functions
@@ -536,6 +565,9 @@ void destroy(EVALABLE *e) {
         case FUNCTION:
             destroyFunction((Function *)e);
             break;
+        case MUL_CHAIN:
+            destroyMulChain((MulChain *)e);
+            break;
     }
 }
 
@@ -555,6 +587,8 @@ double evaluate(EVALABLE *e, double value) {
             return evaluateLogarithm((Logarithm *)e, value);
         case FUNCTION:
             return evaluateFunction((Function *)e, value);
+        case MUL_CHAIN:
+            return evaluateMulChain((MulChain *)e, value);
     }
 }
 
@@ -574,6 +608,8 @@ EVALABLE *derive(EVALABLE *e) {
             return deriveLogarithm((Logarithm *)e);
         case FUNCTION:
             return deriveFunction((Function *)e);
+        case MUL_CHAIN:
+            return deriveMulChain((MulChain *)e);
     }
 }
 
@@ -599,6 +635,9 @@ void print(EVALABLE *e) {
             break;
         case FUNCTION:
             printFunction((Function *)e);
+            break;
+        case MUL_CHAIN:
+            printMulChain((MulChain *)e);
             break;
     }
 }
@@ -675,42 +714,42 @@ char *parseTrigonometric(char *input, EVALABLE **e)
         input += 3;
         EVALABLE *arg;
         input = parseInsideParantheses(input, &arg);
-        *e = (EVALABLE *)createTrigonometric(SIN, NULL, arg);
+        *e = (EVALABLE *)createTrigonometric(SIN, arg);
     }
     else if (strncmp(input, "cos", 3) == 0)
     {
         input += 3;
         EVALABLE *arg;
         input = parseInsideParantheses(input, &arg);
-        *e = (EVALABLE *)createTrigonometric(COS, NULL, arg);
+        *e = (EVALABLE *)createTrigonometric(COS, arg);
     }
     else if (strncmp(input, "tan", 3) == 0)
     {
         input += 3;
         EVALABLE *arg;
         input = parseInsideParantheses(input, &arg);
-        *e = (EVALABLE *)createTrigonometric(TAN, NULL, arg);
+        *e = (EVALABLE *)createTrigonometric(TAN, arg);
     }
     else if (strncmp(input, "csc", 3) == 0)
     {
         input += 3;
         EVALABLE *arg;
         input = parseInsideParantheses(input, &arg);
-        *e = (EVALABLE *)createTrigonometric(CSC, NULL, arg);
+        *e = (EVALABLE *)createTrigonometric(CSC, arg);
     }
     else if (strncmp(input, "sec", 3) == 0)
     {
         input += 3;
         EVALABLE *arg;
         input = parseInsideParantheses(input, &arg);
-        *e = (EVALABLE *)createTrigonometric(SEC, NULL, arg);
+        *e = (EVALABLE *)createTrigonometric(SEC, arg);
     }
     else if (strncmp(input, "cot", 3) == 0)
     {
         input += 3;
         EVALABLE *arg;
         input = parseInsideParantheses(input, &arg);
-        *e = (EVALABLE *)createTrigonometric(COT, NULL, arg);
+        *e = (EVALABLE *)createTrigonometric(COT, arg);
     }
     return input;
 }
@@ -769,17 +808,19 @@ char *parseLogarithm(char *input, EVALABLE **e)
     }
     EVALABLE *value;
     input = parseInsideParantheses(input, &value);
-    *e = (EVALABLE *)createLogarithm(NULL, base, value);
+    *e = (EVALABLE *)createLogarithm(base, value);
     return input;
 }
 
 char *parseExpression(char *input, EVALABLE **e)
 {
     Function *f = createFunction();
-    double coefficient = 1;
-    int sign = 1;
-    int state = 0;
+    MulChain *m = createMulChain();
+    EVALABLE *arg;
+    int isPositive = 1;
+    int isDivided = 0;
     // 0: Start
+    // 1: Coefficient
     while (input[0])
     {
         // Check if it is a constant
@@ -790,179 +831,159 @@ char *parseExpression(char *input, EVALABLE **e)
         }
         if (strncmp(input, "log", 3) == 0)
         {
-            input = parseLogarithm(input, e);
-            // add coeeficient to e 
-            if (sign == -1)
-            {
-                coefficient *= -1;
-            }
-            ((Logarithm *)*e)->cofactor = (EVALABLE *)createConstant(coefficient);
-            addFunctionArg(f, *e);
+            input = parseLogarithm(input, &arg);
         }
-        if (strncmp(input, "sin", 3) == 0 || strncmp(input, "cos", 3) == 0 || strncmp(input, "tan", 3) == 0 || strncmp(input, "csc", 3) == 0 || strncmp(input, "sec", 3) == 0 || strncmp(input, "cot", 3) == 0)
+        else if (strncmp(input, "sin", 3) == 0 || strncmp(input, "cos", 3) == 0 || strncmp(input, "tan", 3) == 0 || strncmp(input, "csc", 3) == 0 || strncmp(input, "sec", 3) == 0 || strncmp(input, "cot", 3) == 0)
         {
-            input = parseTrigonometric(input, e);
-            addFunctionArg(f, *e);
+            input = parseTrigonometric(input, &arg);
         }
-        if (input[0] == '(')
+        else if (input[0] == '(')
         {
-            EVALABLE *insideParantheses;
-            input = parseInsideParantheses(input, &insideParantheses);
-            addFunctionArg(f, insideParantheses);
-            if (input[0] != '*')
-            {
-                if (state != 0)
-                {
-                    if (sign == -1)
-                    {
-                        coefficient *= -1;
-                    }
-                    addFunctionArg(f, (EVALABLE *)createConstant(coefficient));
-                    coefficient = 1;
-                }
-            }
-            else if (input[0] == '^')
-            {
-                input++;
-                EVALABLE *exponent;
-                input = parseInsideParantheses(input, &exponent);
-                addFunctionArg(f, (EVALABLE *)createExponential((EVALABLE *)createConstant(coefficient), insideParantheses, exponent));
-                coefficient = 1;
-            }
-            else
-            {
-                input++;
-            }
-            state = 0;
+            input++;
+            EVALABLE *temp;
+            input = parseInsideParantheses(input, &temp);
         }
-        if (input[0] >= '0' && input[0] <= '9')
+        else if (input[0] >= '0' && input[0] <= '9')
         {
-            coefficient = 0;
-            state = 1;
+            printf("Parsing constant\n");
+            double value = 0;
             while (input[0] >= '0' && input[0] <= '9')
             {
-                coefficient = coefficient * 10 + (input[0] - '0');
+                value = value * 10 + (input[0] - '0');
                 input++;
             }
             if (input[0] == '.')
             {
                 input++;
+                double decimal = 0;
+                double divider = 10;
                 while (input[0] >= '0' && input[0] <= '9')
                 {
-                    coefficient = coefficient + (double)(input[0] - '0') / 10;
+                    decimal += (input[0] - '0') / divider;
+                    divider *= 10;
                     input++;
                 }
+                value += decimal;
             }
-            printf("Coefficient: %Lf\n", coefficient);
-            if (input[0] != '*')
+            arg = (EVALABLE *)createConstant(value);
+            printf("Constant: %Lf\n", value);
+        }
+        else if (input[0] == '^')
+        {
+            printf("Parsing exponential\n");
+            input++;
+            EVALABLE *exponent;
+            input = parseInsideParantheses(input, &exponent);
+            arg = (EVALABLE *)createExponential(arg, exponent);
+        }
+        else if (input[0] == 'x')
+        {
+            arg = (EVALABLE *)createVariable();
+            input++;
+        }
+        else if (input[0] == 'e')
+        {
+            input++;
+            arg = (EVALABLE *)createConstant(M_E);
+        }
+        else if (input[0] == '+')
+        {
+            printf("Parsing addition\n");
+            printf("Arg: ");
+            print(arg);
+            printf("\n");
+
+            addMulChainArg(m, arg, isDivided);
+            arg = NULL;
+            printf("MulChain: ");
+            print((EVALABLE *)m);
+            printf("\nArgcount: %d\n", m->argCount);
+            printf("isPositive: %d\n", isPositive);
+
+            EVALABLE *val;
+            if (m->argCount == 1)
             {
-                if (sign == -1)
-                {
-                    coefficient *= -1;
-                }
-                addFunctionArg(f, (EVALABLE *)createConstant(coefficient));
-                coefficient = 1;
+                val = m->args[0];
             }
             else
             {
-                input++;
+                val = (EVALABLE *)m;
             }
-        }
-        if (input[0] == 'x')
-        {
-            state = 2;
+            addFunctionArg(f, val, isPositive);
+
+            m = createMulChain();
+            printf("Function: ");
+            print((EVALABLE *)f);
+            printf("\n");
+            isPositive = 1;
+            isDivided = 0;
             input++;
-            if (input[0] == '^')
-            {
-                input++;
-                EVALABLE *exponent;
-                input = parseInsideParantheses(input, &exponent);
-                if (sign == -1)
-                {
-                    coefficient *= -1;
-                }
-                addFunctionArg(f, (EVALABLE *)createExponential((EVALABLE *)createConstant(coefficient), (EVALABLE *)createVariable(NULL), exponent));
-                coefficient = 1;
-            }
-            else
-            {
-                if (sign == -1)
-                {
-                    coefficient *= -1;
-                }
-                addFunctionArg(f, (EVALABLE *)createVariable((EVALABLE *)createConstant(coefficient)));
-                coefficient = 1;
-            }
         }
-        if (input[0] == 'e')
+        else if (input[0] == '-')
         {
+            addMulChainArg(m, arg, isDivided);
+            arg = NULL;
+            addFunctionArg(f, (EVALABLE *)m, isPositive);
+            isPositive = 0;
+            isDivided = 0;
             input++;
-            if (input[0] == '^')
-            {
-                input++;
-                EVALABLE *exponent;
-                input = parseInsideParantheses(input, &exponent);
-                if (sign == -1)
-                {
-                    coefficient *= -1;
-                }
-                addFunctionArg(f, (EVALABLE *)createExponential((EVALABLE *)createConstant(coefficient), (EVALABLE *)createConstant(M_E), exponent));
-                coefficient = 1;
-            }
-            else
-            {
-                if (sign == -1)
-                {
-                    coefficient *= -1;
-                }
-                addFunctionArg(f, (EVALABLE *)createConstant(coefficient * M_E));
-                coefficient = 1;
-            }
         }
-        if (input[0] == '+')
+        else if (input[0] == '*')
         {
+            printf("Parsing multiplication\n");
+            addMulChainArg(m, arg, isDivided);
+            arg = NULL;
+            isDivided = 0;
             input++;
-            continue;
         }
-        if (input[0] == '-')
+        else if (input[0] == '/')
         {
-            sign = -1;
+            addMulChainArg(m, arg, isDivided);
+            arg = NULL;
+            isDivided = 1;
             input++;
-            continue;
         }
     }
-    *e = (EVALABLE *)f;
+    if (arg != NULL)
+    {
+        printf("Adding last arg\n");
+        printf("Arg: ");
+        print(arg);
+        printf("\n");
+        addMulChainArg(m, arg, isDivided);
+    }
+    printf("Adding last mulchain\n");
+    printf("function before: ");
+    print((EVALABLE *)f);
+    printf("\n");
+    addFunctionArg(f, (EVALABLE *)m, isPositive);
+    printf("Function after: ");
+    print((EVALABLE *)f);
+    printf("\n");
+    EVALABLE *result;
+    if (f->argCount == 1)
+    {
+        result = f->args[0];
+    }
+    else
+    {
+        result = (EVALABLE *)f;
+    }
+    *e = result;
     return input;
 }
 
 int main()
 {
     EVALABLE *f;
-    parseExpression("2*log_(10)(sin(5*x))-x", &f);
-    double result = evaluate(f, 9);
+    char *input = "x^(2) + 3*x*sin(x) + 2";
+    printf("Input: %s\n", input);
+    parseExpression(input, &f);
+    printf("Parsed: ");
     print(f);
     printf("\n");
-    printf("Result: %Lf\n", result);
 
-    printf("-----------------\n");
-    parseExpression("log_(x)(sin(5*x^(2)+sin(5*x)))", &f);
-    print(f);
-    printf("\n");
-    result = evaluate(f, 3);
-    printf("Result: %Lf\n", result);
-
-    printf("-----------------\n");
-    parseExpression("x^(e^(5*x))", &f);
-    print(f);
-    printf("\n");
-    result = evaluate(f, 3);
-    printf("Result: %Lf\n", result);
-
-    printf("-----------------\n");
-    parseExpression("x^(sin(log_(5)(x^(3))))", &f);
-    print(f);
-    printf("\n");
-    result = evaluate(f, 3);
+    double result = evaluate(f, 1);
     printf("Result: %Lf\n", result);
 
     return 0;
