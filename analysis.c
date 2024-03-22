@@ -19,6 +19,15 @@
 double evaluate(EVALABLE *e, double value);
 #define EVALTYPE(x) ((EvalAble *)x)->type
 
+/* Struct for status codes */ 
+typedef struct _StatusCode {
+    char code;
+    char expected;
+    char *pos;
+} StatusCode;
+
+/* Enumerations */
+
 typedef enum _EvalAbleType {
     CONSTANT,
     VARIABLE,
@@ -772,13 +781,13 @@ double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon)
 
 /* Parser functions */
 
-char *parseExpression(char *input, EVALABLE **e);
-char *parseLogarithm(char *input, EVALABLE **e);
-char *parseInsideParantheses(char *input, EVALABLE **e);
-char *parseTrigonometric(char *input, EVALABLE **e);
+char *parseExpression(char *input, EVALABLE **e, StatusCode *s);
+char *parseLogarithm(char *input, EVALABLE **e, StatusCode *s);
+char *parseInsideParantheses(char *input, EVALABLE **e, StatusCode *s);
+char *parseTrigonometric(char *input, EVALABLE **e, StatusCode *s);
+char *parseInverseTrigonometric(char *input, EVALABLE **e, StatusCode *s);
 
-
-char *parseTrigonometric(char *input, EVALABLE **e)
+char *parseTrigonometric(char *input, EVALABLE **e, StatusCode *s)
 {
     TrigonometricType type;
     if (strncmp(input, "sin", 3) == 0)
@@ -798,16 +807,18 @@ char *parseTrigonometric(char *input, EVALABLE **e)
     input += 3;
     if (input[0] != '(')
     {
-        printf("Error: Expected '(' after trigonometric function\n");
+        s->code = 2;
+        s->expected = '(';
+        s->pos = input;
         return input;
     }
     EVALABLE *arg;
-    input = parseInsideParantheses(input, &arg);
+    input = parseInsideParantheses(input, &arg, s);
     *e = (EVALABLE *)createTrigonometric(type, arg);
     return input;
 }
 
-char *parseInverseTrigonometric(char *input, EVALABLE **e)
+char *parseInverseTrigonometric(char *input, EVALABLE **e, StatusCode *s)
 {
     InverseTrigonometricType type;
     if (strncmp(input, "asin", 4) == 0)
@@ -827,20 +838,24 @@ char *parseInverseTrigonometric(char *input, EVALABLE **e)
     input += 4;
     if (input[0] != '(')
     {
-        printf("Error: Expected '(' after inverse trigonometric function\n");
+        s->code = 2;
+        s->expected = '(';
+        s->pos = input;
         return input;
     }
     EVALABLE *arg;
-    input = parseInsideParantheses(input, &arg);
+    input = parseInsideParantheses(input, &arg, s);
     *e = (EVALABLE *)createInverseTrigonometric(type, arg);
     return input;
 }
 
-char *parseInsideParantheses(char *input, EVALABLE **e)
+char *parseInsideParantheses(char *input, EVALABLE **e, StatusCode *s)
 {
     if (input[0] != '(')
     {
-        printf("Error: Expected '(' at the beginning of parantheses\n");
+        s->code = 2;
+        s->expected = '(';
+        s->pos = input;
         return input;
     }
     int i = 1;
@@ -861,12 +876,12 @@ char *parseInsideParantheses(char *input, EVALABLE **e)
     strncpy(insideParantheses, input+1, i-2);
     insideParantheses[i] = '\0';
     input += i;
-    parseExpression(insideParantheses, e);
+    parseExpression(insideParantheses, e, s);
     free(insideParantheses);
     return input;
 }
 
-char *parseLogarithm(char *input, EVALABLE **e)
+char *parseLogarithm(char *input, EVALABLE **e, StatusCode *s)
 {
     if (input[0] != 'l' || input[1] != 'o' || input[2] != 'g')
     {
@@ -875,31 +890,35 @@ char *parseLogarithm(char *input, EVALABLE **e)
     input += 3;
     if (input[0] != '_')
     {
+        s->code = 2;
+        s->expected = '_';
+        s->pos = input;
         return input;
     }
     input++;
     EVALABLE *base;
-    input = parseInsideParantheses(input, &base);
+    input = parseInsideParantheses(input, &base, s);
     if (input[0] != '(')
     {
-        printf("Error: Expected '(' after base of logarithm\n");
+        s->code = 2;
+        s->expected = '(';
+        s->pos = input;
         return input;
     }
     EVALABLE *value;
-    input = parseInsideParantheses(input, &value);
+    input = parseInsideParantheses(input, &value, s);
     *e = (EVALABLE *)createLogarithm(base, value);
     return input;
 }
 
-char *parseExpression(char *input, EVALABLE **e)
+char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
 {
     SumChain *f = createSumChain();
     MulChain *m = createMulChain();
     EVALABLE *arg;
     int isPositive = 1;
     int isDivided = 0;
-    // 0: Start
-    // 1: Coefficient
+    char *inputStart = input;
     while (input[0])
     {
         // Check if it is a constant
@@ -910,7 +929,7 @@ char *parseExpression(char *input, EVALABLE **e)
         }
         if (strncmp(input, "log", 3) == 0)
         {
-            input = parseLogarithm(input, &arg);
+            input = parseLogarithm(input, &arg, s);
         }
         else if (
             strncmp(input, "sin", 3) == 0 || 
@@ -920,7 +939,7 @@ char *parseExpression(char *input, EVALABLE **e)
             strncmp(input, "sec", 3) == 0 || 
             strncmp(input, "cot", 3) == 0)
         {
-            input = parseTrigonometric(input, &arg);
+            input = parseTrigonometric(input, &arg, s);
         }
         else if (
             strncmp(input, "asin", 4) == 0 ||
@@ -930,12 +949,12 @@ char *parseExpression(char *input, EVALABLE **e)
             strncmp(input, "asec", 4) == 0 ||
             strncmp(input, "acot", 4) == 0)
         {
-            input = parseInverseTrigonometric(input, &arg);
+            input = parseInverseTrigonometric(input, &arg, s);
         }
         else if (input[0] == '(')
         {
             EVALABLE *temp;
-            input = parseInsideParantheses(input, &temp);
+            input = parseInsideParantheses(input, &temp, s);
         }
         else if (input[0] >= '0' && input[0] <= '9')
         {
@@ -964,7 +983,7 @@ char *parseExpression(char *input, EVALABLE **e)
         {
             input++;
             EVALABLE *exponent;
-            input = parseInsideParantheses(input, &exponent);
+            input = parseInsideParantheses(input, &exponent, s);
             arg = (EVALABLE *)createExponential(arg, exponent);
         }
         else if (input[0] == 'x')
@@ -1031,6 +1050,12 @@ char *parseExpression(char *input, EVALABLE **e)
             isDivided = 1;
             input++;
         }
+        else 
+        {
+            s->code = 1;
+            s->pos = input;
+            return input;
+        }
     }
     if (arg != NULL)
     {
@@ -1064,12 +1089,42 @@ char *parseExpression(char *input, EVALABLE **e)
 
 int main()
 {
+    // success code, 0 means no error
+    // first byte of the input is the error code
+    // the rest is the id of the character that caused the error
+    StatusCode status;
+
     EVALABLE *f;
-    printf("Enter the function: ");
+    printf("Enter your function: ");
     char input[256];
+    char *pos = &input[0];
     fgets(input, 256, stdin);
     input[strlen(input) - 1] = '\0';
-    parseExpression(input, &f);
+    parseExpression(input, &f, &status);
+    if (status.code != 0)
+    {
+        int pos = status.pos - input + 1;
+        switch (status.code)
+        {
+            case 1:
+                printf("[Failed to parse]   ");
+                for (int i = 0; i < pos; i++)
+                {
+                    printf(" ");
+                }
+                printf("^ Unexpected character.\n");
+                break;
+            case 2:
+                printf("[Failed to parse]   ");
+                for (int i = 0; i < pos; i++)
+                {
+                    printf(" ");
+                }
+                printf("^ Expected '%c', received '%c'\n", status.expected, *status.pos);
+                break;
+        }
+        return 1;
+    }
     printf("Enter the value to evaluate: ");
     double value;
     scanf("%Lf", &value);
