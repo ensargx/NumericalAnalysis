@@ -954,8 +954,7 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
         }
         else if (input[0] == '(')
         {
-            EVALABLE *temp;
-            input = parseInsideParantheses(input, &temp, s);
+            input = parseInsideParantheses(input, &arg, s);
         }
         else if (input[0] >= '0' && input[0] <= '9')
         {
