@@ -115,56 +115,47 @@ typedef struct _Logarithm {
 Variable *createVariable();
 void destroyVariable(Variable *v);
 double evaluateVariable(Variable *v, double value);
-EVALABLE *deriveVariable(Variable *v);
 void printVariable(Variable *v);
 
 Constant *createConstant(double value);
 void destroyConstant(Constant *c);
 double evaluateConstant(Constant *c, double value);
-EVALABLE *deriveConstant(Constant *c);
 void printConstant(Constant *c);
 
 Exponential *createExponential(EVALABLE *base, EVALABLE *exponent);
 void destroyExponential(Exponential *e);
 double evaluateExponential(Exponential *e, double value);
-EVALABLE *deriveExponential(Exponential *e);    
 void printExponential(Exponential *e);
 
 Logarithm *createLogarithm(EVALABLE *base, EVALABLE *value);
 void destroyLogarithm(Logarithm *l);
 double evaluateLogarithm(Logarithm *l, double value);
-EVALABLE *deriveLogarithm(Logarithm *l);
 void printLogarithm(Logarithm *l);
 
 SumChain *createSumChain();
 void addSumChainArg(SumChain *f, EVALABLE *argType, int sign);
 void destroySumChain(SumChain *f);
 double evaluateSumChain(SumChain *f, double value);
-EVALABLE *deriveSumChain(SumChain *f);
 void printSumChain(SumChain *f);
 
 MulChain *createMulChain();
 void addMulChainArg(MulChain *m, EVALABLE *arg, int isDivided);
 void destroyMulChain(MulChain *m);
 double evaluateMulChain(MulChain *m, double value);
-EVALABLE *deriveMulChain(MulChain *m);
 void printMulChain(MulChain *m);
 
 Trigonometric *createTrigonometric(TrigonometricType type, EVALABLE *arg);
 void destroyTrigonometric(Trigonometric *t);
 double evaluateTrigonometric(Trigonometric *t, double value);
-EVALABLE *deriveTrigonometric(Trigonometric *t);
 void printTrigonometric(Trigonometric *t);
 
 InverseTrigonometric *createInverseTrigonometric(InverseTrigonometricType type, EVALABLE *arg);
 void destroyInverseTrigonometric(InverseTrigonometric *it);
 double evaluateInverseTrigonometric(InverseTrigonometric *it, double value);
-EVALABLE *deriveInverseTrigonometric(InverseTrigonometric *it);
 void printInverseTrigonometric(InverseTrigonometric *it);
 
 double evaluate(EVALABLE *e, double value);
 void destroy(EVALABLE *e);
-EVALABLE *derive(EVALABLE *e);
 void print(EVALABLE *e);
 
 /* SumChain implementations */
@@ -185,14 +176,6 @@ void destroyVariable(Variable *v)
 double evaluateVariable(Variable *v, double value)
 {
     return value;
-}
-
-EVALABLE *deriveVariable(Variable *v)
-{
-    // (EVALABLE)*x
-    SumChain *f = createSumChain();
-    addSumChainArg(f, (EVALABLE *)createConstant(1), 1);
-    return (EVALABLE *)f;
 }
 
 void printVariable(Variable *v)
@@ -244,11 +227,6 @@ double evaluateMulChain(MulChain *m, double value)
     return result;
 }
 
-EVALABLE *deriveMulChain(MulChain *m)
-{
-    return NULL;
-}
-
 void printMulChain(MulChain *m)
 {
     for (int i = 0; i < m->argCount && m->args[i] != NULL; i++)
@@ -285,11 +263,6 @@ double evaluateConstant(Constant *c, double value)
     return c->value;
 }
 
-EVALABLE *deriveConstant(Constant *c)
-{
-    return NULL;
-}
-
 void printConstant(Constant *c)
 {
     printf("%Lf", c->value);
@@ -321,13 +294,6 @@ void destroyExponential(Exponential *e)
 double evaluateExponential(Exponential *e, double value)
 {
     return pow(evaluate(e->base, value), evaluate(e->exponent, value));
-}
-
-EVALABLE *deriveExponential(Exponential *e) 
-{
-    // (EVALABLE)*x
-    SumChain *f = createSumChain();
-    return (EVALABLE *)f;
 }
 
 void printExponential(Exponential *e)
@@ -375,11 +341,6 @@ double evaluateTrigonometric(Trigonometric *t, double value)
         case COT:
             return 1 / tan(evaluate(t->arg, value));
     }
-}
-
-EVALABLE *deriveTrigonometric(Trigonometric *t)
-{
-    return NULL;
 }
 
 void printTrigonometric(Trigonometric *t)
@@ -448,11 +409,6 @@ double evaluateInverseTrigonometric(InverseTrigonometric *it, double value)
     }
 }
 
-EVALABLE *deriveInverseTrigonometric(InverseTrigonometric *it)
-{
-    return NULL;
-}
-
 void printInverseTrigonometric(InverseTrigonometric *it)
 {
     switch (it->trigType)
@@ -513,11 +469,6 @@ double evaluateLogarithm(Logarithm *l, double value)
     return log(evaluate(l->value, value)) / log(evaluate(l->base, value));
 }
 
-EVALABLE *deriveLogarithm(Logarithm *l)
-{
-    return NULL;
-}
-
 void printLogarithm(Logarithm *l)
 {
     printf("log_");
@@ -549,6 +500,10 @@ void addSumChainArg(SumChain *f, EVALABLE *arg, int isPositive)
 
 void destroySumChain(SumChain *f)
 {
+    for (int i = 0; i < f->argCount && f->args[i] != NULL; i++)
+    {
+        destroy(f->args[i]);
+    }
     free(f);
 }
 
@@ -565,16 +520,6 @@ double evaluateSumChain(SumChain *f, double value)
         }
     }
     return result;
-}
-
-EVALABLE *deriveSumChain(SumChain *f)
-{
-    SumChain *df = createSumChain();
-    for (int i = 0; i < f->argCount && f->args[i] != NULL; i++)
-    {
-        addSumChainArg(df, derive((EVALABLE *)f->args[i]), f->isPositive[i]);
-    }
-    return (EVALABLE *)df;
 }
 
 void printSumChain(SumChain *f)
@@ -645,29 +590,6 @@ double evaluate(EVALABLE *e, double value)
             return evaluateSumChain((SumChain *)e, value);
         case MUL_CHAIN:
             return evaluateMulChain((MulChain *)e, value);
-    }
-}
-
-EVALABLE *derive(EVALABLE *e)
-{
-    switch (EVALTYPE(e))
-    {
-        case CONSTANT:
-            return deriveConstant((Constant *)e);
-        case VARIABLE:
-            return deriveVariable((Variable *)e);
-        case EXPONENTIAL:
-            return deriveExponential((Exponential *)e);
-        case TRIGONOMETRIC:
-            return deriveTrigonometric((Trigonometric *)e);
-        case INVERSE_TRIGONOMETRIC:
-            return deriveInverseTrigonometric((InverseTrigonometric *)e);
-        case LOGARITHM:
-            return deriveLogarithm((Logarithm *)e);
-        case SUM_CHAIN:
-            return deriveSumChain((SumChain *)e);
-        case MUL_CHAIN:
-            return deriveMulChain((MulChain *)e);
     }
 }
 
