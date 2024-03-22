@@ -915,7 +915,6 @@ char *parseExpression(char *input, EVALABLE **e)
         }
         else if (input[0] == '(')
         {
-            input++;
             EVALABLE *temp;
             input = parseInsideParantheses(input, &temp);
         }
@@ -1052,15 +1051,19 @@ char *parseExpression(char *input, EVALABLE **e)
 int main()
 {
     EVALABLE *f;
-    char *input = "x^(2) + 3*x*sin(x) + log_(31)(x^(5*x+2) + x)";
-    printf("Input: %s\n", input);
+    printf("Enter the function: ");
+    char input[256];
+    fgets(input, 256, stdin);
+    input[strlen(input) - 1] = '\0';
     parseExpression(input, &f);
-    printf("Parsed: ");
     print(f);
     printf("\n");
-
-    double result = evaluate(f, 1);
+    printf("Enter the value to evaluate: ");
+    double value;
+    scanf("%Lf", &value);
+    double result = evaluate(f, value);
     printf("Result: %Lf\n", result);
+    destroy(f);
 
     return 0;
 }
