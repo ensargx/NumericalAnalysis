@@ -209,8 +209,9 @@ MulChain *createMulChain()
 
 void addMulChainArg(MulChain *m, EVALABLE *arg, int isDivided)
 {
-    m->args[m->argCount++] = arg;
+    m->args[m->argCount] = arg;
     m->isDivided[m->argCount] = isDivided;
+    m->argCount++;
 }
 
 void destroyMulChain(MulChain *m)
