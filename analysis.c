@@ -979,6 +979,7 @@ char *parseExpression(char *input, EVALABLE **e)
     if (f->argCount == 1)
     {
         result = f->args[0];
+        destroySumChain(f);
     }
     else
     {
