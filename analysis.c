@@ -17,6 +17,7 @@
 #define double long double
 
 double evaluate(EVALABLE *e, double value);
+#define EVALTYPE(x) ((EvalAble *)x)->type
 
 typedef enum _EvalAbleType {
     CONSTANT,
@@ -39,16 +40,11 @@ typedef struct _Logarithm Logarithm;
 typedef struct _Trigonometric Trigonometric;
 typedef enum _TrigonometricType TrigonometricType;
 typedef struct _InverseTrigonometric InverseTrigonometric;
-
+typedef enum _InverseTrigonometricType InverseTrigonometricType;
 
 typedef struct _EvalAble {
     EvalAbleType type;
 } EvalAble;
-
-typedef struct _SumChain SumChain;
-typedef struct _Constant Constant;
-typedef struct _Variable Variable;
-typedef struct _Exponential Exponential;
 
 EvalAbleType checkType(EVALABLE e)
 {
@@ -605,7 +601,7 @@ void printSumChain(SumChain *f)
 
 void destroy(EVALABLE *e)
 {
-    switch (checkType(e))
+    switch (EVALTYPE(e))
     {
         case CONSTANT:
             destroyConstant((Constant *)e);
@@ -636,7 +632,7 @@ void destroy(EVALABLE *e)
 
 double evaluate(EVALABLE *e, double value)
 {
-    switch (checkType(e))
+    switch (EVALTYPE(e))
     {
         case CONSTANT:
             return evaluateConstant((Constant *)e, value);
@@ -659,7 +655,7 @@ double evaluate(EVALABLE *e, double value)
 
 EVALABLE *derive(EVALABLE *e)
 {
-    switch (checkType(e))
+    switch (EVALTYPE(e))
     {
         case CONSTANT:
             return deriveConstant((Constant *)e);
@@ -682,7 +678,7 @@ EVALABLE *derive(EVALABLE *e)
 
 void print(EVALABLE *e)
 {
-    switch (checkType(e))
+    switch (EVALTYPE(e))
     {
         case CONSTANT:
             printConstant((Constant *)e);
