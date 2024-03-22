@@ -674,6 +674,38 @@ void print(EVALABLE *e)
     }
 }
 
+void printType(EVALABLE *e)
+{
+    EvalAbleType type = EVALTYPE(e);
+    switch (type)
+    {
+        case CONSTANT:
+            printf("Constant\n");
+            break;
+        case VARIABLE:
+            printf("Variable\n");
+            break;
+        case EXPONENTIAL:
+            printf("Exponential\n");
+            break;
+        case TRIGONOMETRIC:
+            printf("Trigonometric\n");
+            break;
+        case INVERSE_TRIGONOMETRIC:
+            printf("Inverse Trigonometric\n");
+            break;
+        case LOGARITHM:
+            printf("Logarithm\n");
+            break;
+        case SUM_CHAIN:
+            printf("Sum Chain\n");
+            break;
+        case MUL_CHAIN:
+            printf("Mul Chain\n");
+            break;
+    }
+}
+
 /* Prototypes for solvers */
 
 double solveBisection(EVALABLE *e, double a, double b, double epsilon);
@@ -829,7 +861,6 @@ char *parseInsideParantheses(char *input, EVALABLE **e)
     strncpy(insideParantheses, input+1, i-2);
     insideParantheses[i] = '\0';
     input += i;
-    printf("Inside parantheses: %s\n", insideParantheses);
     parseExpression(insideParantheses, e);
     free(insideParantheses);
     return input;
@@ -837,7 +868,6 @@ char *parseInsideParantheses(char *input, EVALABLE **e)
 
 char *parseLogarithm(char *input, EVALABLE **e)
 {
-    printf("Parsing logarithm\n");
     if (input[0] != 'l' || input[1] != 'o' || input[2] != 'g')
     {
         return input;
@@ -845,7 +875,6 @@ char *parseLogarithm(char *input, EVALABLE **e)
     input += 3;
     if (input[0] != '_')
     {
-        printf("Error: Expected '_' after 'log'\n");
         return input;
     }
     input++;
@@ -910,7 +939,6 @@ char *parseExpression(char *input, EVALABLE **e)
         }
         else if (input[0] >= '0' && input[0] <= '9')
         {
-            printf("Parsing constant\n");
             double value = 0;
             while (input[0] >= '0' && input[0] <= '9')
             {
@@ -931,11 +959,9 @@ char *parseExpression(char *input, EVALABLE **e)
                 value += decimal;
             }
             arg = (EVALABLE *)createConstant(value);
-            printf("Constant: %Lf\n", value);
         }
         else if (input[0] == '^')
         {
-            printf("Parsing exponential\n");
             input++;
             EVALABLE *exponent;
             input = parseInsideParantheses(input, &exponent);
@@ -953,22 +979,13 @@ char *parseExpression(char *input, EVALABLE **e)
         }
         else if (input[0] == '+')
         {
-            printf("Parsing addition\n");
-            printf("Arg: ");
-            print(arg);
-            printf("\n");
-
             addMulChainArg(m, arg, isDivided);
             arg = NULL;
-            printf("MulChain: ");
-            print((EVALABLE *)m);
-            printf("\nArgcount: %d\n", m->argCount);
-            printf("isPositive: %d\n", isPositive);
-
             EVALABLE *val;
             if (m->argCount == 1)
             {
-                val = m->args[0];
+                val = copyEvalable(m->args[0]);
+                destroyMulChain(m);
             }
             else
             {
@@ -977,9 +994,6 @@ char *parseExpression(char *input, EVALABLE **e)
             addSumChainArg(f, val, isPositive);
 
             m = createMulChain();
-            printf("SumChain: ");
-            print((EVALABLE *)f);
-            printf("\n");
             isPositive = 1;
             isDivided = 0;
             input++;
@@ -988,14 +1002,23 @@ char *parseExpression(char *input, EVALABLE **e)
         {
             addMulChainArg(m, arg, isDivided);
             arg = NULL;
-            addSumChainArg(f, (EVALABLE *)m, isPositive);
+            EVALABLE *val;
+            if (m->argCount == 1)
+            {
+                val = copyEvalable(m->args[0]);
+                destroyMulChain(m);
+            }
+            else
+            {
+                val = (EVALABLE *)m;
+            }
+            addSumChainArg(f, val, isPositive);
             isPositive = 0;
             isDivided = 0;
             input++;
         }
         else if (input[0] == '*')
         {
-            printf("Parsing multiplication\n");
             addMulChainArg(m, arg, isDivided);
             arg = NULL;
             isDivided = 0;
@@ -1011,22 +1034,19 @@ char *parseExpression(char *input, EVALABLE **e)
     }
     if (arg != NULL)
     {
-        printf("Adding last arg\n");
-        printf("Arg: ");
-        print(arg);
-        printf("\n");
         addMulChainArg(m, arg, isDivided);
     }
-    printf("Adding last mulchain\n");
-    printf("function before: ");
-    print((EVALABLE *)f);
-    printf("\n");
-    addSumChainArg(f, (EVALABLE *)m, isPositive);
-    printf("SumChain after: ");
-    print((EVALABLE *)f);
-    printf("\n");
-    printf("Mulchain length: %d\n", m->argCount);
-    printf("Sumchain length: %d\n", f->argCount);
+    EVALABLE *val;
+    if (m->argCount == 1)
+    {
+        val = copyEvalable(m->args[0]);
+        destroyMulChain(m);
+    }
+    else
+    {
+        val = (EVALABLE *)m;
+    }
+    addSumChainArg(f, (EVALABLE *)val, isPositive);
     EVALABLE *result;
     if (f->argCount == 1)
     {
@@ -1050,43 +1070,12 @@ int main()
     fgets(input, 256, stdin);
     input[strlen(input) - 1] = '\0';
     parseExpression(input, &f);
-    print(f);
-    printf("\n");
     printf("Enter the value to evaluate: ");
     double value;
     scanf("%Lf", &value);
     double result = evaluate(f, value);
     printf("Result: %Lf\n", result);
     
-    printf("Type: ");
-    switch (EVALTYPE(f))
-    {
-        case CONSTANT:
-            printf("Constant\n");
-            break;
-        case VARIABLE:
-            printf("Variable\n");
-            break;
-        case EXPONENTIAL:
-            printf("Exponential\n");
-            break;
-        case TRIGONOMETRIC:
-            printf("Trigonometric\n");
-            break;
-        case INVERSE_TRIGONOMETRIC:
-            printf("Inverse Trigonometric\n");
-            break;
-        case LOGARITHM:
-            printf("Logarithm\n");
-            break;
-        case SUM_CHAIN:
-            printf("Sum Chain\n");
-            break;
-        case MUL_CHAIN:
-            printf("Mul Chain\n");
-            break;
-    }
-
     destroy(f);
 
     return 0;
