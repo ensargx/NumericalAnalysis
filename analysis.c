@@ -21,7 +21,7 @@ double evaluate(EVALABLE *e, double value);
 typedef enum _EvalAbleType {
     CONSTANT,
     VARIABLE,
-    FUNCTION,
+    SUM_CHAIN,
     MUL_CHAIN,
     LOGARITHM,
     EXPONENTIAL,
@@ -32,7 +32,7 @@ typedef enum _EvalAbleType {
 /* Struct Prototypes */
 typedef struct _Constant Constant;
 typedef struct _Variable Variable;
-typedef struct _Function Function;
+typedef struct _SumChain SumChain;
 typedef struct _MulChain MulChain;
 typedef struct _Exponential Exponential;
 typedef struct _Logarithm Logarithm;
@@ -45,7 +45,7 @@ typedef struct _EvalAble {
     EvalAbleType type;
 } EvalAble;
 
-typedef struct _Function Function;
+typedef struct _SumChain SumChain;
 typedef struct _Constant Constant;
 typedef struct _Variable Variable;
 typedef struct _Exponential Exponential;
@@ -64,12 +64,12 @@ typedef struct _Variable {
     EvalAbleType type;
 } Variable;
 
-typedef struct _Function {
+typedef struct _SumChain {
     EvalAbleType type;
     int argCount;
     EVALABLE *args[MAX_FUNC_ARGS];
     int isPositive[MAX_FUNC_ARGS];
-} Function;
+} SumChain;
 
 typedef struct _MulChain {
     EvalAbleType type;
@@ -120,7 +120,7 @@ typedef struct _Logarithm {
     EVALABLE *value;
 } Logarithm;
 
-/* Function prototypes */
+/* SumChain prototypes */
 Variable *createVariable();
 void destroyVariable(Variable *v);
 double evaluateVariable(Variable *v, double value);
@@ -145,12 +145,12 @@ double evaluateLogarithm(Logarithm *l, double value);
 EVALABLE *deriveLogarithm(Logarithm *l);
 void printLogarithm(Logarithm *l);
 
-Function *createFunction();
-void addFunctionArg(Function *f, EVALABLE *argType, int sign);
-void destroyFunction(Function *f);
-double evaluateFunction(Function *f, double value);
-EVALABLE *deriveFunction(Function *f);
-void printFunction(Function *f);
+SumChain *createSumChain();
+void addSumChainArg(SumChain *f, EVALABLE *argType, int sign);
+void destroySumChain(SumChain *f);
+double evaluateSumChain(SumChain *f, double value);
+EVALABLE *deriveSumChain(SumChain *f);
+void printSumChain(SumChain *f);
 
 MulChain *createMulChain();
 void addMulChainArg(MulChain *m, EVALABLE *arg, int isDivided);
@@ -176,7 +176,7 @@ void destroy(EVALABLE *e);
 EVALABLE *derive(EVALABLE *e);
 void print(EVALABLE *e);
 
-/* Function implementations */
+/* SumChain implementations */
 
 // Variable functions
 Variable *createVariable()
@@ -199,8 +199,8 @@ double evaluateVariable(Variable *v, double value)
 EVALABLE *deriveVariable(Variable *v)
 {
     // (EVALABLE)*x
-    Function *f = createFunction();
-    addFunctionArg(f, (EVALABLE *)createConstant(1), 1);
+    SumChain *f = createSumChain();
+    addSumChainArg(f, (EVALABLE *)createConstant(1), 1);
     return (EVALABLE *)f;
 }
 
@@ -335,7 +335,7 @@ double evaluateExponential(Exponential *e, double value)
 EVALABLE *deriveExponential(Exponential *e) 
 {
     // (EVALABLE)*x
-    Function *f = createFunction();
+    SumChain *f = createSumChain();
     return (EVALABLE *)f;
 }
 
@@ -536,12 +536,12 @@ void printLogarithm(Logarithm *l)
     printf(")");
 }
 
-// Function functions
+// SumChain functions
 
-Function *createFunction()
+SumChain *createSumChain()
 {
-    Function *f = (Function *)malloc(sizeof(Function));
-    f->type = FUNCTION;
+    SumChain *f = (SumChain *)malloc(sizeof(SumChain));
+    f->type = SUM_CHAIN;
     f->argCount = 0;
     for (int i = 0; i < MAX_FUNC_ARGS; i++)
     {
@@ -550,18 +550,18 @@ Function *createFunction()
     return f;
 }
 
-void addFunctionArg(Function *f, EVALABLE *arg, int isPositive)
+void addSumChainArg(SumChain *f, EVALABLE *arg, int isPositive)
 {
     f->args[f->argCount] = arg;
     f->isPositive[f->argCount++] = isPositive;
 }
 
-void destroyFunction(Function *f)
+void destroySumChain(SumChain *f)
 {
     free(f);
 }
 
-double evaluateFunction(Function *f, double value)
+double evaluateSumChain(SumChain *f, double value)
 {
     double result = 0;
     for (int i = 0; i < f->argCount && f->args[i] != NULL; i++)
@@ -576,17 +576,17 @@ double evaluateFunction(Function *f, double value)
     return result;
 }
 
-EVALABLE *deriveFunction(Function *f)
+EVALABLE *deriveSumChain(SumChain *f)
 {
-    Function *df = createFunction();
+    SumChain *df = createSumChain();
     for (int i = 0; i < f->argCount && f->args[i] != NULL; i++)
     {
-        addFunctionArg(df, derive((EVALABLE *)f->args[i]), f->isPositive[i]);
+        addSumChainArg(df, derive((EVALABLE *)f->args[i]), f->isPositive[i]);
     }
     return (EVALABLE *)df;
 }
 
-void printFunction(Function *f)
+void printSumChain(SumChain *f)
 {
     for (int i = 0; i < f->argCount && f->args[i] != NULL; i++)
     {
@@ -625,8 +625,8 @@ void destroy(EVALABLE *e)
         case LOGARITHM:
             destroyLogarithm((Logarithm *)e);
             break;
-        case FUNCTION:
-            destroyFunction((Function *)e);
+        case SUM_CHAIN:
+            destroySumChain((SumChain *)e);
             break;
         case MUL_CHAIN:
             destroyMulChain((MulChain *)e);
@@ -650,8 +650,8 @@ double evaluate(EVALABLE *e, double value)
             return evaluateInverseTrigonometric((InverseTrigonometric *)e, value);
         case LOGARITHM:
             return evaluateLogarithm((Logarithm *)e, value);
-        case FUNCTION:
-            return evaluateFunction((Function *)e, value);
+        case SUM_CHAIN:
+            return evaluateSumChain((SumChain *)e, value);
         case MUL_CHAIN:
             return evaluateMulChain((MulChain *)e, value);
     }
@@ -673,8 +673,8 @@ EVALABLE *derive(EVALABLE *e)
             return deriveInverseTrigonometric((InverseTrigonometric *)e);
         case LOGARITHM:
             return deriveLogarithm((Logarithm *)e);
-        case FUNCTION:
-            return deriveFunction((Function *)e);
+        case SUM_CHAIN:
+            return deriveSumChain((SumChain *)e);
         case MUL_CHAIN:
             return deriveMulChain((MulChain *)e);
     }
@@ -702,8 +702,8 @@ void print(EVALABLE *e)
         case LOGARITHM:
             printLogarithm((Logarithm *)e);
             break;
-        case FUNCTION:
-            printFunction((Function *)e);
+        case SUM_CHAIN:
+            printSumChain((SumChain *)e);
             break;
         case MUL_CHAIN:
             printMulChain((MulChain *)e);
@@ -890,7 +890,7 @@ char *parseLogarithm(char *input, EVALABLE **e)
 
 char *parseExpression(char *input, EVALABLE **e)
 {
-    Function *f = createFunction();
+    SumChain *f = createSumChain();
     MulChain *m = createMulChain();
     EVALABLE *arg;
     int isPositive = 1;
@@ -984,10 +984,10 @@ char *parseExpression(char *input, EVALABLE **e)
             {
                 val = (EVALABLE *)m;
             }
-            addFunctionArg(f, val, isPositive);
+            addSumChainArg(f, val, isPositive);
 
             m = createMulChain();
-            printf("Function: ");
+            printf("SumChain: ");
             print((EVALABLE *)f);
             printf("\n");
             isPositive = 1;
@@ -998,7 +998,7 @@ char *parseExpression(char *input, EVALABLE **e)
         {
             addMulChainArg(m, arg, isDivided);
             arg = NULL;
-            addFunctionArg(f, (EVALABLE *)m, isPositive);
+            addSumChainArg(f, (EVALABLE *)m, isPositive);
             isPositive = 0;
             isDivided = 0;
             input++;
@@ -1031,8 +1031,8 @@ char *parseExpression(char *input, EVALABLE **e)
     printf("function before: ");
     print((EVALABLE *)f);
     printf("\n");
-    addFunctionArg(f, (EVALABLE *)m, isPositive);
-    printf("Function after: ");
+    addSumChainArg(f, (EVALABLE *)m, isPositive);
+    printf("SumChain after: ");
     print((EVALABLE *)f);
     printf("\n");
     EVALABLE *result;
