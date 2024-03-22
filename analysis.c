@@ -46,11 +46,6 @@ typedef struct _EvalAble {
     EvalAbleType type;
 } EvalAble;
 
-EvalAbleType checkType(EVALABLE e)
-{
-    return ((EvalAble *)e)->type;
-}
-
 typedef struct _Constant {
     EvalAbleType type;
     double value;
