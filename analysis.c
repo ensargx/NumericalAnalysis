@@ -158,7 +158,8 @@ double evaluate(EVALABLE *e, double value);
 void destroy(EVALABLE *e);
 void print(EVALABLE *e);
 
-/* SumChain implementations */
+/* Function implementations */
+
 
 // Variable functions
 Variable *createVariable()
@@ -534,6 +535,55 @@ void printSumChain(SumChain *f)
             printf("-");
         }
         print(f->args[i]);
+    }
+}
+
+EVALABLE *copyEvalable(EVALABLE *e)
+{
+    switch (EVALTYPE(e))
+    {
+        case CONSTANT:
+            return (EVALABLE *)createConstant(((Constant *)e)->value);
+        case VARIABLE:
+            return (EVALABLE *)createVariable();
+        case EXPONENTIAL:
+            return (EVALABLE *)createExponential(
+                copyEvalable(((Exponential *)e)->base),
+                copyEvalable(((Exponential *)e)->exponent)
+            );
+        case TRIGONOMETRIC:
+            return (EVALABLE *)createTrigonometric(
+                ((Trigonometric *)e)->trigType,
+                copyEvalable(((Trigonometric *)e)->arg)
+            );
+        case INVERSE_TRIGONOMETRIC:
+            return (EVALABLE *)createInverseTrigonometric(
+                ((InverseTrigonometric *)e)->trigType,
+                copyEvalable(((InverseTrigonometric *)e)->arg)
+            );
+        case LOGARITHM:
+            return (EVALABLE *)createLogarithm(
+                copyEvalable(((Logarithm *)e)->base),
+                copyEvalable(((Logarithm *)e)->value)
+            );
+        case SUM_CHAIN:
+        {
+            SumChain *f = createSumChain();
+            for (int i = 0; i < ((SumChain *)e)->argCount; i++)
+            {
+                addSumChainArg(f, copyEvalable(((SumChain *)e)->args[i]), ((SumChain *)e)->isPositive[i]);
+            }
+            return (EVALABLE *)f;
+        }
+        case MUL_CHAIN:
+        {
+            MulChain *m = createMulChain();
+            for (int i = 0; i < ((SumChain *)e)->argCount; i++)
+            {
+                addMulChainArg(m, copyEvalable(((SumChain *)e)->args[i]), ((SumChain *)e)->isPositive[i]);
+            }
+            return (EVALABLE *)m;
+        }
     }
 }
 
@@ -978,7 +1028,7 @@ char *parseExpression(char *input, EVALABLE **e)
     EVALABLE *result;
     if (f->argCount == 1)
     {
-        result = f->args[0];
+        result = copyEvalable(f->args[0]);
         destroySumChain(f);
     }
     else
