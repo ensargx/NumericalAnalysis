@@ -12,7 +12,9 @@
 
 #define EVALABLE void*
 
-#define MAX_FUNC_ARGS 256
+#ifndef MAX_FUNC_ARGS
+#define MAX_FUNC_ARGS 16
+#endif
 
 #define double long double
 
