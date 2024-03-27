@@ -860,13 +860,11 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
     char *inputStart = input;
     while (input[0])
     {
-        // Check if it is a constant
         if (input[0] == ' ')
         {
             input++;
-            continue;
         }
-        if (strncmp(input, "log", 3) == 0)
+        else if (strncmp(input, "log", 3) == 0)
         {
             input = parseLogarithm(input, &arg, s);
         }
@@ -1008,6 +1006,8 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
             return input;
         }
     }
+    printf("DEBUG: arg = %p\n", arg);
+    printType(arg);
     if (arg != NULL)
     {
         addMulChainArg(m, arg, isDivided);
