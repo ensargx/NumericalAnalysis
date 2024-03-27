@@ -1140,29 +1140,15 @@ double integrateSimpson13(EVALABLE *e, double a, double b, int n)
 
 double integrateSimpson38(EVALABLE *e, double a, double b, int n)
 {
-    if (n % 3 != 0)
-    {
-        printf("n must be divisible by 3 for Simpson's 3/8 rule.\n");
-        return NAN;
-    }
+    double sum = 0;
     double h = (b - a) / n;
-    double sum1 = 0;
-    double sum2 = 0;
-    double sum3 = 0;
-    for (int i = 1; i < n; i++)
+    for (int i = 0; i < n; i++)
     {
-        if (i % 3 == 0)
-        {
-            sum1 += evaluate(e, a + i * h);
-        } else if (i % 3 == 1)
-        {
-            sum2 += evaluate(e, a + i * h);
-        } else
-        {
-            sum3 += evaluate(e, a + i * h);
-        }
+        b = a + h;
+        sum += (b - a) / 8 * (evaluate(e, a) + 3 * evaluate(e, (a + (b-a)/3)) + 3 * evaluate(e, (a + 2*(b-a)/3)) + evaluate(e, b));
+        a = b;
     }
-    return (3 * h / 8) * (evaluate(e, a) + evaluate(e, b) + 3 * sum1 + 3 * sum2 + 2 * sum3);
+    return sum;
 }
 
 int main()
@@ -1232,7 +1218,7 @@ int main()
     printf("Enter the number of intervals: ");
     int n;
     scanf("%d", &n);
-    double result = integrateTrapez(f, a, b, n);
+    double result = integrateSimpson38(f, a, b, n);
     printf("Result of the trapezoidal integration: %Lf\n", result);
     
     destroy(f);
