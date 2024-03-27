@@ -955,7 +955,7 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
             input++;
             arg = (EVALABLE *)createConstant(M_E);
         }
-        else if (input[0] == '+')
+        else if (input[0] == '+' || input[0] == '-')
         {
             addMulChainArg(m, arg, isDivided);
             arg = NULL;
@@ -970,31 +970,15 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
                 val = (EVALABLE *)m;
             }
             addSumChainArg(f, val, isPositive);
-
-            m = createMulChain();
-            isPositive = 1;
-            isDivided = 0;
-            input++;
-        }
-        else if (input[0] == '-')
-        {
-            addMulChainArg(m, arg, isDivided);
-            arg = NULL;
-            EVALABLE *val;
-            if (m->argCount == 1)
+            if (input[0] == '+')
             {
-                val = copyEvalable(m->args[0]);
-                destroyMulChain(m);
+                isPositive = 1;
             }
-            else
+            else if (input[0] == '-')
             {
-                val = (EVALABLE *)m;
+                isPositive = 0;
             }
-            addSumChainArg(f, val, isPositive);
-
             m = createMulChain();
-            isPositive = 0;
-            isDivided = 0;
             input++;
         }
         else if (input[0] == '*')
