@@ -192,7 +192,7 @@ double evaluateVariable(Variable *v, double value)
 
 void printVariable(Variable *v)
 {
-    printf("(x)");
+    printf("x");
 }
 
 // MulChain functions
@@ -249,9 +249,9 @@ void printMulChain(MulChain *m)
         {
             if (m->isDivided[i + 1] == 1)
             {
-                printf(" / ");
+                printf("/");
             } else {
-                printf(" * ");
+                printf("*");
             }
         }
     }
@@ -537,17 +537,27 @@ double evaluateSumChain(SumChain *f, double value)
 
 void printSumChain(SumChain *f)
 {
-    for (int i = 0; i < f->argCount && f->args[i] != NULL; i++)
+    if (f->argCount == 0)
+    {
+        return;
+    }
+    printf("(");
+    if (f->isPositive[0] == 0)
+    {
+        printf("-");
+    }
+    print(f->args[0]);
+    for (int i = 1; i < f->argCount && f->args[i] != NULL; i++)
     {
         if (f->isPositive[i] == 1)
         {
             printf("+");
-        } else
-        {
+        } else {
             printf("-");
         }
         print(f->args[i]);
     }
+    printf(")");
 }
 
 EVALABLE *copyEvalable(EVALABLE *e)
@@ -981,6 +991,8 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
                 val = (EVALABLE *)m;
             }
             addSumChainArg(f, val, isPositive);
+
+            m = createMulChain();
             isPositive = 0;
             isDivided = 0;
             input++;
@@ -1006,10 +1018,10 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
             return input;
         }
     }
-    printf("DEBUG: arg = %p\n", arg);
-    printType(arg);
     if (arg != NULL)
     {
+        printf("Type of arg: ");
+        printType(arg);
         addMulChainArg(m, arg, isDivided);
     }
     EVALABLE *val;
@@ -1231,6 +1243,8 @@ int main()
         }
         return 1;
     }
+    printf("Function: ");
+    print(f);
     // test trapez integration
     printf("Enter the interval [a, b]: ");
     double a, b;
