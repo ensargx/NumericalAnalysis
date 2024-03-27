@@ -1004,8 +1004,6 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
     }
     if (arg != NULL)
     {
-        printf("Type of arg: ");
-        printType(arg);
         addMulChainArg(m, arg, isDivided);
     }
     EVALABLE *val;
@@ -1227,8 +1225,6 @@ int main()
         }
         return 1;
     }
-    printf("Function: ");
-    print(f);
     // test trapez integration
     printf("Enter the interval [a, b]: ");
     double a, b;
