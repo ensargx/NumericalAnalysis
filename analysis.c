@@ -17,6 +17,7 @@
 #endif
 
 #define double long double
+#define ABS(x) ((x) < 0 ? -(x) : (x))
 
 double evaluate(EVALABLE *e, double value);
 #define EVALTYPE(x) ((EvalAble *)x)->type
@@ -1040,6 +1041,7 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
 
 double solveBisection(EVALABLE *e, double a, double b, double epsilon);
 double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon);
+double solveNewtonRaphson(EVALABLE *e, double x0, double epsilon);
 
 /* integral functions */ 
 double integrateTrapez(EVALABLE *e, double a, double b, int n);
@@ -1102,6 +1104,20 @@ double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon)
         }
     }
     return c;
+}
+
+double solveNewtonRaphson(EVALABLE *e, double x0, double epsilon)
+{
+    double x = x0;
+    double fx = evaluate(e, x);
+    double dfx = (evaluate(e, x + epsilon) - fx) / epsilon;
+    while (ABS(fx) > epsilon)
+    {
+        x = x - fx / dfx;
+        fx = evaluate(e, x);
+        dfx = (evaluate(e, x + epsilon) - fx) / epsilon;
+    }
+    return x;
 }
 
 double integrateTrapez(EVALABLE *e, double a, double b, int n)
@@ -1211,15 +1227,15 @@ int main()
         }
         return 1;
     }
-    // test trapez integration
-    printf("Enter the interval [a, b]: ");
-    double a, b;
-    scanf("%Lf %Lf", &a, &b);
-    printf("Enter the number of intervals: ");
-    int n;
-    scanf("%d", &n);
-    double result = integrateSimpson38(f, a, b, n);
-    printf("Result of the trapezoidal integration: %Lf\n", result);
+    // newton raphson
+    double x0, epsilon;
+    printf("Enter initial guess for Newton-Raphson method: ");
+    scanf("%Lf", &x0);
+    printf("Enter epsilon for Newton-Raphson method: ");
+    scanf("%Lf", &epsilon);
+
+    double result = solveNewtonRaphson(f, x0, epsilon);
+    printf("Result: %Lf\n", result);
     
     destroy(f);
 
