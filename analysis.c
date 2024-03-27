@@ -718,70 +718,6 @@ void printType(EVALABLE *e)
     }
 }
 
-/* Prototypes for solvers */
-
-double solveBisection(EVALABLE *e, double a, double b, double epsilon);
-double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon);
-
-
-
-/* solver implementations */
-
-double solveBisection(EVALABLE *e, double a, double b, double epsilon)
-{
-    // TODO: Aralığı tanımsız yapan değer var mı kontrol et.
-    double fa = evaluate(e, a);
-    double fb = evaluate(e, b);
-    double c;
-    if (fa * fb > 0)
-    {
-        return NAN;
-    }
-    while ((b - a) > epsilon)
-    {
-        c = (a + b) / 2;
-        double fc = evaluate(e, c);
-        if (fc == 0)
-        {
-            return c;
-        }
-        else if (fa * fc < 0)
-        {
-            b = c;
-            fb = fc;
-        } else {
-            a = c;
-            fa = fc;
-        }
-    }
-    return c;
-}
-
-double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon)
-{
-    double fa = evaluate(e, a);
-    double fb = evaluate(e, b);
-    double c;
-    if (fa * fb > 0)
-    {
-        return NAN;
-    }
-    while ((b - a) > epsilon)
-    {
-        c = (a * fb - b * fa) / (fb - fa);
-        double fc = evaluate(e, c);
-        if (fa * fc < 0)
-        {
-            b = c;
-            fb = fc;
-        } else {
-            a = c;
-            fa = fc;
-        }
-    }
-    return c;
-}
-
 /* Parser functions */
 
 char *parseExpression(char *input, EVALABLE **e, StatusCode *s);
@@ -1098,8 +1034,89 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
         result = (EVALABLE *)f;
     }
 
+    s->code = 0;
+    s->pos = inputStart;
+    s->expected = '\0';
+
     *e = result;
     return input;
+}
+
+/* Prototypes for solvers */
+
+double solveBisection(EVALABLE *e, double a, double b, double epsilon);
+double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon);
+
+/* integral functions */ 
+double integrateTrapez(EVALABLE *e, double a, double b, int n);
+
+
+/* solver implementations */
+
+double solveBisection(EVALABLE *e, double a, double b, double epsilon)
+{
+    // TODO: Aralığı tanımsız yapan değer var mı kontrol et.
+    double fa = evaluate(e, a);
+    double fb = evaluate(e, b);
+    double c;
+    if (fa * fb > 0)
+    {
+        return NAN;
+    }
+    while ((b - a) > epsilon)
+    {
+        c = (a + b) / 2;
+        double fc = evaluate(e, c);
+        if (fc == 0)
+        {
+            return c;
+        }
+        else if (fa * fc < 0)
+        {
+            b = c;
+            fb = fc;
+        } else {
+            a = c;
+            fa = fc;
+        }
+    }
+    return c;
+}
+
+double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon)
+{
+    double fa = evaluate(e, a);
+    double fb = evaluate(e, b);
+    double c;
+    if (fa * fb > 0)
+    {
+        return NAN;
+    }
+    while ((b - a) > epsilon)
+    {
+        c = (a * fb - b * fa) / (fb - fa);
+        double fc = evaluate(e, c);
+        if (fa * fc < 0)
+        {
+            b = c;
+            fb = fc;
+        } else {
+            a = c;
+            fa = fc;
+        }
+    }
+    return c;
+}
+
+double integrateTrapez(EVALABLE *e, double a, double b, int n)
+{
+    double h = (b - a) / n;
+    double sum = 0;
+    for (int i = 1; i < n; i++)
+    {
+        sum += evaluate(e, a + i * h);
+    }
+    return h * (evaluate(e, a) + evaluate(e, b) + 2 * sum) / 2;
 }
 
 int main()
@@ -1127,6 +1144,9 @@ int main()
     // first byte of the input is the error code
     // the rest is the id of the character that caused the error
     StatusCode status;
+    status.code = 0;
+    status.pos = NULL;
+    status.expected = '\0';
 
     EVALABLE *f;
     printf("Enter your function: ");
@@ -1159,11 +1179,14 @@ int main()
         }
         return 1;
     }
-    printf("Enter the value to evaluate: ");
-    double value;
-    scanf("%Lf", &value);
-    double result = evaluate(f, value);
-    printf("Result: %Lf\n", result);
+    // test trapez integration
+    printf("Enter the interval [a, b]: ");
+    double a, b;
+    scanf("%Lf %Lf", &a, &b);
+    printf("Enter the number of intervals: ");
+    int n;
+    scanf("%d", &n);
+    printf("Result of the trapezoidal integration: %Lf\n", integrateTrapez(f, a, b, n));
     
     destroy(f);
 
