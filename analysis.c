@@ -1049,6 +1049,8 @@ double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon);
 
 /* integral functions */ 
 double integrateTrapez(EVALABLE *e, double a, double b, int n);
+double integrateSimpson13(EVALABLE *e, double a, double b, int n);
+double integrateSimpson38(EVALABLE *e, double a, double b, int n);
 
 
 /* solver implementations */
@@ -1119,6 +1121,29 @@ double integrateTrapez(EVALABLE *e, double a, double b, int n)
     return h * (evaluate(e, a) + evaluate(e, b) + 2 * sum) / 2;
 }
 
+double integrateSimpson13(EVALABLE *e, double a, double b, int n)
+{
+    if (n % 2 != 0)
+    {
+        printf("n must be even for Simpson's 1/3 rule.\n");
+        return NAN;
+    }
+    double h = (b - a) / n;
+    double sum1 = 0;
+    double sum2 = 0;
+    for (int i = 1; i < n; i++)
+    {
+        if (i % 2 == 0)
+        {
+            sum1 += evaluate(e, a + i * h);
+        } else
+        {
+            sum2 += evaluate(e, a + i * h);
+        }
+    }
+    return (h / 3) * (evaluate(e, a) + evaluate(e, b) + 2 * sum1 + 4 * sum2);
+}
+
 int main()
 {
     char banner[] = 
@@ -1186,7 +1211,8 @@ int main()
     printf("Enter the number of intervals: ");
     int n;
     scanf("%d", &n);
-    printf("Result of the trapezoidal integration: %Lf\n", integrateTrapez(f, a, b, n));
+    double result = integrateTrapez(f, a, b, n);
+    printf("Result of the trapezoidal integration: %Lf\n", result);
     
     destroy(f);
 
