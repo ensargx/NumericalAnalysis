@@ -854,7 +854,7 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
 {
     SumChain *f = createSumChain();
     MulChain *m = createMulChain();
-    EVALABLE *arg;
+    EVALABLE *arg = NULL;
     int isPositive = 1;
     int isDivided = 0;
     char *inputStart = input;
@@ -1142,6 +1142,33 @@ double integrateSimpson13(EVALABLE *e, double a, double b, int n)
         }
     }
     return (h / 3) * (evaluate(e, a) + evaluate(e, b) + 2 * sum1 + 4 * sum2);
+}
+
+double integrateSimpson38(EVALABLE *e, double a, double b, int n)
+{
+    if (n % 3 != 0)
+    {
+        printf("n must be divisible by 3 for Simpson's 3/8 rule.\n");
+        return NAN;
+    }
+    double h = (b - a) / n;
+    double sum1 = 0;
+    double sum2 = 0;
+    double sum3 = 0;
+    for (int i = 1; i < n; i++)
+    {
+        if (i % 3 == 0)
+        {
+            sum1 += evaluate(e, a + i * h);
+        } else if (i % 3 == 1)
+        {
+            sum2 += evaluate(e, a + i * h);
+        } else
+        {
+            sum3 += evaluate(e, a + i * h);
+        }
+    }
+    return (3 * h / 8) * (evaluate(e, a) + evaluate(e, b) + 3 * sum1 + 3 * sum2 + 2 * sum3);
 }
 
 int main()
