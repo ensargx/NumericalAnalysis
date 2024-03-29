@@ -1168,6 +1168,11 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
             input++;
             arg = (EVALABLE *)createConstant(M_E);
         }
+        else if (strncmp(input, "pi", 2) == 0 || (strncmp(input, "PI", 2) == 0))
+        {
+            input += 2;
+            arg = (EVALABLE *)createConstant(M_PI);
+        }
         else if (input[0] == '+' || input[0] == '-')
         {
             addMulChainArg(m, arg, isDivided);
