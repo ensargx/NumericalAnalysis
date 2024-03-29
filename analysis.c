@@ -329,6 +329,7 @@ Trigonometric *createTrigonometric(TrigonometricType type, EVALABLE *arg)
         arg = (EVALABLE *)createConstant(1);
     }
     t->arg = arg;
+    t->trigType = type;
     return t;
 }
 
@@ -395,6 +396,7 @@ InverseTrigonometric *createInverseTrigonometric(InverseTrigonometricType type, 
         arg = (EVALABLE *)createConstant(1);
     }
     it->arg = arg;
+    it->trigType = type;
     return it;
 }
 
@@ -727,6 +729,216 @@ void printType(EVALABLE *e)
             printf("Mul Chain\n");
             break;
     }
+}
+
+/* Optimize functions */ 
+EVALABLE *optimize(EVALABLE *e);
+EVALABLE *optimizeSumChain(SumChain *f);
+EVALABLE *optimizeMulChain(MulChain *m);
+EVALABLE *optimizeExponential(Exponential *e);
+EVALABLE *optimizeTrigonometric(Trigonometric *t);
+EVALABLE *optimizeInverseTrigonometric(InverseTrigonometric *it);
+EVALABLE *optimizeLogarithm(Logarithm *l);
+
+EVALABLE *optimize(EVALABLE *e)
+{
+    switch (EVALTYPE(e))
+    {
+        case CONSTANT:
+        case VARIABLE:
+            return e;
+        case EXPONENTIAL:
+            return optimizeExponential((Exponential *)e);
+        case TRIGONOMETRIC:
+            return optimizeTrigonometric((Trigonometric *)e);
+        case INVERSE_TRIGONOMETRIC:
+            return optimizeInverseTrigonometric((InverseTrigonometric *)e);
+        case LOGARITHM:
+            return optimizeLogarithm((Logarithm *)e);
+        case MUL_CHAIN:
+            return optimizeMulChain((MulChain *)e);
+        case SUM_CHAIN:
+            return optimizeSumChain((SumChain *)e);
+    }
+}
+
+EVALABLE *optimizeSumChain(SumChain *f)
+{
+    for (int i = 0; i < f->argCount; i++)
+    {
+        f->args[i] = optimize(f->args[i]);
+    }
+    double constantSum = 0;
+    SumChain *optimized = createSumChain();
+    for (int i = 0; i < f->argCount; i++)
+    {
+        if (EVALTYPE(f->args[i]) == CONSTANT)
+        {
+            if (f->isPositive[i] == 1)
+            {
+                constantSum += ((Constant *)f->args[i])->value;
+                destroy(f->args[i]);
+            } else
+            {
+                constantSum -= ((Constant *)f->args[i])->value;
+                destroy(f->args[i]);
+            }
+        } else
+        {
+            EVALABLE *arg = copyEvalable(f->args[i]);
+            addSumChainArg(optimized, arg, f->isPositive[i]);
+        }
+    }
+    if (optimized->argCount == 0)
+    {
+        destroySumChain(optimized);
+        destroySumChain(f);
+        return (EVALABLE *)createConstant(constantSum);
+    }
+    if (constantSum != 0)
+    {
+        addSumChainArg(optimized, (EVALABLE *)createConstant(constantSum), 1);
+    }
+    return (EVALABLE *)optimized;
+}
+
+EVALABLE *optimizeMulChain(MulChain *m)
+{
+    for (int i = 0; i < m->argCount; i++)
+    {
+        m->args[i] = optimize(m->args[i]);
+    }
+    double constantMul = 1;
+    MulChain *optimized = createMulChain();
+    for (int i = 0; i < m->argCount; i++)
+    {
+        if (EVALTYPE(m->args[i]) == CONSTANT)
+        {
+            if (m->isDivided[i] == 1)
+            {
+                constantMul /= ((Constant *)m->args[i])->value;
+            } else
+            {
+                constantMul *= ((Constant *)m->args[i])->value;
+            }
+        } else
+        {
+            EVALABLE *arg = copyEvalable(m->args[i]);
+            addMulChainArg(optimized, arg, m->isDivided[i]);
+        }
+    }
+    if (optimized->argCount == 0)
+    {
+        destroyMulChain(optimized);
+        destroyMulChain(m);
+        return (EVALABLE *)createConstant(constantMul);
+    }
+    if (constantMul != 1)
+    {
+        destroyMulChain(m);
+        addMulChainArg(optimized, (EVALABLE *)createConstant(constantMul), 0);
+    }
+    return (EVALABLE *)optimized;
+}
+
+EVALABLE *optimizeExponential(Exponential *e)
+{
+    e->base = optimize(e->base);
+    e->exponent = optimize(e->exponent);
+    if (EVALTYPE(e->base) == CONSTANT && EVALTYPE(e->exponent) == CONSTANT)
+    {
+        double base = ((Constant *)e->base)->value;
+        double exponent = ((Constant *)e->exponent)->value;
+        destroy(e->base);
+        destroy(e->exponent);
+        return (EVALABLE *)createConstant(pow(base, exponent));
+    }
+    return (EVALABLE *)e;
+}
+
+EVALABLE *optimizeLogarithm(Logarithm *l)
+{
+    l->base = optimize(l->base);
+    l->value = optimize(l->value);
+    if (EVALTYPE(l->base) == CONSTANT && EVALTYPE(l->value) == CONSTANT)
+    {
+        double base = ((Constant *)l->base)->value;
+        double value = ((Constant *)l->value)->value;
+        destroy(l->base);
+        destroy(l->value);
+        return (EVALABLE *)createConstant(log(value) / log(base));
+    }
+    return (EVALABLE *)l;
+}
+
+EVALABLE *optimizeTrigonometric(Trigonometric *t)
+{
+    t->arg = optimize(t->arg);
+    if (EVALTYPE(t->arg) == CONSTANT)
+    {
+        double val = ((Constant *)t->arg)->value;
+        destroy(t->arg);
+        double result;
+        switch (t->trigType)
+        {
+            case SIN:
+                result = sin(val);
+                break;
+            case COS:
+                result = cos(val);
+                break;
+            case TAN:
+                result = tan(val);
+                break;
+            case CSC:
+                result = 1 / sin(val);
+                break;
+            case SEC:
+                result = 1 / cos(val);
+                break;
+            case COT:
+                result = 1 / tan(val);
+                break;
+        }
+        destroyTrigonometric(t);
+        return (EVALABLE *)createConstant(result);
+    }
+    return (EVALABLE *)t;
+}
+
+EVALABLE *optimizeInverseTrigonometric(InverseTrigonometric *it)
+{
+    it->arg = optimize(it->arg);
+    if (EVALTYPE(it->arg) == CONSTANT)
+    {
+        double val = ((Constant *)it->arg)->value;
+        destroy(it->arg);
+        double result;
+        switch (it->trigType)
+        {
+            case ASIN:
+                result = asin(val);
+                break;
+            case ACOS:
+                result = acos(val);
+                break;
+            case ATAN:
+                result = atan(val);
+                break;
+            case ACSC:
+                result = asin(1 / val);
+                break;
+            case ASEC:
+                result = acos(1 / val);
+                break;
+            case ACOT:
+                result = atan(1 / val);
+                break;
+        }
+        destroyInverseTrigonometric(it);
+        return (EVALABLE *)createConstant(result);
+    }
+    return (EVALABLE *)it;
 }
 
 /* Parser functions */
@@ -1227,15 +1439,10 @@ int main()
         }
         return 1;
     }
-    // newton raphson
-    double x0, epsilon;
-    printf("Enter initial guess for Newton-Raphson method: ");
-    scanf("%Lf", &x0);
-    printf("Enter epsilon for Newton-Raphson method: ");
-    scanf("%Lf", &epsilon);
-
-    double result = solveNewtonRaphson(f, x0, epsilon);
-    printf("Result: %Lf\n", result);
+    f = optimize(f);
+    printf("f(x) = ");
+    print(f);
+    printf("\n");
     
     destroy(f);
 
