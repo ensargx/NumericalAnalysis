@@ -1073,6 +1073,14 @@ char *parseLogarithm(char *input, EVALABLE **e, StatusCode *s)
     return input;
 }
 
+#define CHECK_ARG_AVAILABLE() \
+    if (isArgAvailable) \
+    { \
+        input--; \
+        input[0] = '*'; \
+        continue; \
+    }
+
 char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
 {
     SumChain *f = createSumChain();
@@ -1080,7 +1088,7 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
     EVALABLE *arg = NULL;
     int isPositive = 1;
     int isDivided = 0;
-    char *inputStart = input;
+    int isArgAvailable = 0;
     while (input[0])
     {
         if (input[0] == ' ')
@@ -1089,10 +1097,13 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
         }
         else if (strncmp(input, "log", 3) == 0)
         {
+            CHECK_ARG_AVAILABLE();
             input = parseLogarithm(input, &arg, s);
+            isArgAvailable = 1;
         }
         else if (strncmp(input, "ln", 2) == 0)
         {
+            CHECK_ARG_AVAILABLE();
             input += 2;
             if (input[0] != '(')
             {
@@ -1103,6 +1114,7 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
             }
             input = parseInsideParantheses(input, &arg, s);
             arg = (EVALABLE *)createLogarithm((EVALABLE *)createConstant(M_E), arg);
+            isArgAvailable = 1;
         }
         else if (
             strncmp(input, "sin", 3) == 0 || 
@@ -1112,7 +1124,9 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
             strncmp(input, "sec", 3) == 0 || 
             strncmp(input, "cot", 3) == 0)
         {
+            CHECK_ARG_AVAILABLE();
             input = parseTrigonometric(input, &arg, s);
+            isArgAvailable = 1;
         }
         else if (
             strncmp(input, "asin", 4) == 0 ||
@@ -1122,14 +1136,19 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
             strncmp(input, "asec", 4) == 0 ||
             strncmp(input, "acot", 4) == 0)
         {
+            CHECK_ARG_AVAILABLE();
             input = parseInverseTrigonometric(input, &arg, s);
+            isArgAvailable = 1;
         }
         else if (input[0] == '(')
         {
+            CHECK_ARG_AVAILABLE();
             input = parseInsideParantheses(input, &arg, s);
+            isArgAvailable = 1;
         }
         else if (input[0] >= '0' && input[0] <= '9')
         {
+            CHECK_ARG_AVAILABLE();
             double value = 0;
             while (input[0] >= '0' && input[0] <= '9')
             {
@@ -1150,6 +1169,7 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
                 value += decimal;
             }
             arg = (EVALABLE *)createConstant(value);
+            isArgAvailable = 1;
         }
         else if (input[0] == '^')
         {
@@ -1157,21 +1177,28 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
             EVALABLE *exponent;
             input = parseInsideParantheses(input, &exponent, s);
             arg = (EVALABLE *)createExponential(arg, exponent);
+            isArgAvailable = 1;
         }
         else if (input[0] == 'x')
         {
-            arg = (EVALABLE *)createVariable();
+            CHECK_ARG_AVAILABLE();
             input++;
+            arg = (EVALABLE *)createVariable();
+            isArgAvailable = 1;
         }
         else if (input[0] == 'e')
         {
+            CHECK_ARG_AVAILABLE();
             input++;
             arg = (EVALABLE *)createConstant(M_E);
+            isArgAvailable = 1;
         }
         else if (strncmp(input, "pi", 2) == 0 || (strncmp(input, "PI", 2) == 0))
         {
+            CHECK_ARG_AVAILABLE();
             input += 2;
             arg = (EVALABLE *)createConstant(M_PI);
+            isArgAvailable = 1;
         }
         else if (input[0] == '+' || input[0] == '-')
         {
@@ -1198,6 +1225,7 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
             }
             m = createMulChain();
             input++;
+            isArgAvailable = 0;
         }
         else if (input[0] == '*')
         {
@@ -1205,6 +1233,7 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
             arg = NULL;
             isDivided = 0;
             input++;
+            isArgAvailable = 0;
         }
         else if (input[0] == '/')
         {
@@ -1212,6 +1241,7 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
             arg = NULL;
             isDivided = 1;
             input++;
+            isArgAvailable = 0;
         }
         else 
         {
@@ -1246,10 +1276,7 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
         result = (EVALABLE *)f;
     }
 
-    s->code = 0;
-    s->pos = inputStart;
-    s->expected = '\0';
-
+    // Check if status code is set to 0 
     *e = result;
     return input;
 }
@@ -1416,7 +1443,6 @@ int main()
     EVALABLE *f;
     printf("Enter your function: ");
     char input[256];
-    char *pos = &input[0];
     fgets(input, 256, stdin);
     input[strlen(input) - 1] = '\0';
     parseExpression(input, &f, &status);
