@@ -1063,7 +1063,7 @@ char *parseInsideParantheses(char *input, EVALABLE **e, StatusCode *s)
     }
     char *insideParantheses = (char *)malloc(i);
     strncpy(insideParantheses, input+1, i-2);
-    insideParantheses[i-1] = '\0';
+    insideParantheses[i-2] = '\0';
     input += i;
     parseExpression(insideParantheses, e, s);
     free(insideParantheses);
@@ -1072,7 +1072,7 @@ char *parseInsideParantheses(char *input, EVALABLE **e, StatusCode *s)
 
 char *parseLogarithm(char *input, EVALABLE **e, StatusCode *s)
 {
-    if (input[0] != 'l' || input[1] != 'o' || input[2] != 'g')
+    if (strncmp(input, "log", 3) != 0)
     {
         return input;
     }
@@ -1086,15 +1086,8 @@ char *parseLogarithm(char *input, EVALABLE **e, StatusCode *s)
     }
     input++;
     EVALABLE *base;
-    input = parseInsideParantheses(input, &base, s);
-    if (input[0] != '(')
-    {
-        s->code = 2;
-        s->expected = '(';
-        s->pos = input;
-        return input;
-    }
     EVALABLE *value;
+    input = parseInsideParantheses(input, &base, s);
     input = parseInsideParantheses(input, &value, s);
     *e = (EVALABLE *)createLogarithm(base, value);
     return input;
