@@ -1100,6 +1100,11 @@ char *parseLogarithm(char *input, EVALABLE **e, StatusCode *s)
     return input;
 }
 
+/* Macro for checking if the argument is available
+ * If the argument is available, the input is set to the previous character
+ * and the current character is set to '*' to evaluate the expressions 
+ * like 2x as 2*x
+*/
 #define CHECK_ARG_AVAILABLE() \
     if (isArgAvailable) \
     { \
