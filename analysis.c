@@ -1220,6 +1220,8 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
             input++;
             EVALABLE *exponent;
             input = parseInsideParantheses(input, &exponent, s);
+            if (s->code != 0)
+                return input;
             arg = (EVALABLE *)createExponential(arg, exponent);
             isArgAvailable = 1;
         }
