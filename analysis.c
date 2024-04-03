@@ -306,6 +306,8 @@ Exponential *createExponential(EVALABLE *base, EVALABLE *exponent)
 
 void destroyExponential(Exponential *e)
 {
+    destroy(e->base);
+    destroy(e->exponent);
     free(e);
 }
 
@@ -752,6 +754,22 @@ EVALABLE *optimizeTrigonometric(Trigonometric *t);
 EVALABLE *optimizeInverseTrigonometric(InverseTrigonometric *it);
 EVALABLE *optimizeLogarithm(Logarithm *l);
 
+/* 
+ * Optimize functions for each type of expression
+ *
+ * The optimization functions are responsible for simplifying the expression
+ * by evaluating the constants and optimizing the expressions that can be
+ * simplified.
+ *
+ * Also the optimization functions are responsible for freeing the memory and
+ * creating a new expression that is optimized if necessary.
+ *
+ * Parameters:
+ * - e: The expression to be optimized
+ *   The expression can be any type of expression
+ * Returns:
+ * - The optimized expression
+*/
 EVALABLE *optimize(EVALABLE *e)
 {
     switch (EVALTYPE(e))
@@ -809,9 +827,9 @@ EVALABLE *optimizeSumChain(SumChain *f)
     }
     if (constantSum != 0)
     {
-        destroySumChain(f);
         addSumChainArg(optimized, (EVALABLE *)createConstant(constantSum), 1);
     }
+    destroySumChain(f);
     return (EVALABLE *)optimized;
 }
 
@@ -848,9 +866,9 @@ EVALABLE *optimizeMulChain(MulChain *m)
     }
     if (constantMul != 1)
     {
-        destroyMulChain(m);
         addMulChainArg(optimized, (EVALABLE *)createConstant(constantMul), 0);
     }
+    destroyMulChain(m);
     return (EVALABLE *)optimized;
 }
 
@@ -888,7 +906,7 @@ EVALABLE *optimizeTrigonometric(Trigonometric *t)
     if (EVALTYPE(t->arg) == CONSTANT)
     {
         double val = ((Constant *)t->arg)->value;
-        double result;
+        double result = 0;
         switch (t->trigType)
         {
             case SIN:
@@ -922,7 +940,7 @@ EVALABLE *optimizeInverseTrigonometric(InverseTrigonometric *it)
     if (EVALTYPE(it->arg) == CONSTANT)
     {
         double val = ((Constant *)it->arg)->value;
-        double result;
+        double result = 0;
         switch (it->trigType)
         {
             case ASIN:
@@ -1098,7 +1116,7 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
     int isPositive = 1;
     int isDivided = 0;
     int isArgAvailable = 0;
-    while (input[0] != '\0')
+    while (input[0])
     {
         if (input[0] == ' ')
         {
@@ -1309,7 +1327,7 @@ double solveBisection(EVALABLE *e, double a, double b, double epsilon)
     // TODO: Aralığı tanımsız yapan değer var mı kontrol et.
     double fa = evaluate(e, a);
     double fb = evaluate(e, b);
-    double c;
+    double c = 0;
     if (fa * fb > 0)
     {
         return NAN;
@@ -1338,7 +1356,7 @@ double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon)
 {
     double fa = evaluate(e, a);
     double fb = evaluate(e, b);
-    double c;
+    double c = 0;
     if (fa * fb > 0)
     {
         return NAN;
@@ -1452,7 +1470,11 @@ int main()
     EVALABLE *f;
     printf("Enter your function: ");
     char input[256];
-    fgets(input, 256, stdin);
+    if (fgets(input, 256, stdin) == NULL)
+    {
+        printf("Failed to read input.\n");
+        return 1;
+    }
     input[strlen(input) - 1] = '\0';
     parseExpression(input, &f, &status);
     if (status.code != 0)
