@@ -978,6 +978,8 @@ char *parseInverseTrigonometric(char *input, EVALABLE **e, StatusCode *s);
 
 char *parseTrigonometric(char *input, EVALABLE **e, StatusCode *s)
 {
+    if (s->code != 0)
+        return input;
     TrigonometricType type;
     if (strncmp(input, "sin", 3) == 0)
         type = SIN;
@@ -1009,6 +1011,8 @@ char *parseTrigonometric(char *input, EVALABLE **e, StatusCode *s)
 
 char *parseInverseTrigonometric(char *input, EVALABLE **e, StatusCode *s)
 {
+    if (s->code != 0)
+        return input;
     InverseTrigonometricType type;
     if (strncmp(input, "asin", 4) == 0)
         type = ASIN;
@@ -1040,6 +1044,8 @@ char *parseInverseTrigonometric(char *input, EVALABLE **e, StatusCode *s)
 
 char *parseInsideParantheses(char *input, EVALABLE **e, StatusCode *s)
 {
+    if (s->code != 0)
+        return input;
     if (input[0] != '(')
     {
         s->code = 2;
@@ -1072,6 +1078,8 @@ char *parseInsideParantheses(char *input, EVALABLE **e, StatusCode *s)
 
 char *parseLogarithm(char *input, EVALABLE **e, StatusCode *s)
 {
+    if (s->code != 0)
+        return input;
     if (strncmp(input, "log", 3) != 0)
     {
         return input;
@@ -1108,6 +1116,8 @@ char *parseLogarithm(char *input, EVALABLE **e, StatusCode *s)
 
 char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
 {
+    if (s->code != 0)
+        return input;
     SumChain *f = createSumChain();
     MulChain *m = createMulChain();
     EVALABLE *arg = NULL;
@@ -1116,6 +1126,8 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
     int isArgAvailable = 0;
     while (input[0])
     {
+        if (s->code != 0)
+            return input;
         if (input[0] == ' ')
         {
             input++;
