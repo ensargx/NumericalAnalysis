@@ -1067,12 +1067,12 @@ char *parseInsideParantheses(char *input, EVALABLE **e, StatusCode *s)
         }
         i++;
     }
-    char *insideParantheses = (char *)malloc(i);
-    strncpy(insideParantheses, input+1, i-2);
-    insideParantheses[i-2] = '\0';
+    // char *insideParantheses = (char *)malloc(i);
+    // strncpy(insideParantheses, input+1, i-2);
+    // insideParantheses[i-2] = '\0';
+    input[i - 1] = '\0';
+    parseExpression(input + 1, e, s);
     input += i;
-    parseExpression(insideParantheses, e, s);
-    free(insideParantheses);
     return input;
 }
 
