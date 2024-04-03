@@ -1096,6 +1096,13 @@ char *parseLogarithm(char *input, EVALABLE **e, StatusCode *s)
     EVALABLE *base;
     EVALABLE *value;
     input = parseInsideParantheses(input, &base, s);
+    if (input[0] != '(')
+    {
+        s->code = 2;
+        s->expected = '(';
+        s->pos = input;
+        return input;
+    }
     input = parseInsideParantheses(input, &value, s);
     *e = (EVALABLE *)createLogarithm(base, value);
     return input;
