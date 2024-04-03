@@ -21,6 +21,7 @@
 
 double evaluate(EVALABLE *e, double value);
 #define EVALTYPE(x) ((EvalAble *)x)->type
+#define UNUSED(x) (void)(x)
 
 /* Struct for status codes */ 
 typedef struct _StatusCode {
@@ -188,11 +189,13 @@ void destroyVariable(Variable *v)
 
 double evaluateVariable(Variable *v, double value)
 {
+    UNUSED(v);
     return value;
 }
 
 void printVariable(Variable *v)
 {
+    UNUSED(v);
     printf("x");
 }
 
@@ -274,6 +277,7 @@ void destroyConstant(Constant *c)
 
 double evaluateConstant(Constant *c, double value)
 {
+    UNUSED(value);
     return c->value;
 }
 
@@ -355,6 +359,8 @@ double evaluateTrigonometric(Trigonometric *t, double value)
             return 1 / cos(evaluate(t->arg, value));
         case COT:
             return 1 / tan(evaluate(t->arg, value));
+        default:
+            return 0;
     }
 }
 
@@ -422,6 +428,8 @@ double evaluateInverseTrigonometric(InverseTrigonometric *it, double value)
             return acos(1 / evaluate(it->arg, value));
         case ACOT:
             return atan(1 / evaluate(it->arg, value));
+        default:
+            return 0;
     }
 }
 
@@ -609,6 +617,8 @@ EVALABLE *copyEvalable(EVALABLE *e)
             }
             return (EVALABLE *)m;
         }
+        default:
+            return NULL;
     }
 }
 
@@ -665,6 +675,8 @@ double evaluate(EVALABLE *e, double value)
             return evaluateSumChain((SumChain *)e, value);
         case MUL_CHAIN:
             return evaluateMulChain((MulChain *)e, value);
+        default:
+            return 0;
     }
 }
 
@@ -759,6 +771,8 @@ EVALABLE *optimize(EVALABLE *e)
             return optimizeMulChain((MulChain *)e);
         case SUM_CHAIN:
             return optimizeSumChain((SumChain *)e);
+        default:
+            return NULL;
     }
 }
 
@@ -777,11 +791,9 @@ EVALABLE *optimizeSumChain(SumChain *f)
             if (f->isPositive[i] == 1)
             {
                 constantSum += ((Constant *)f->args[i])->value;
-                destroy(f->args[i]);
             } else
             {
                 constantSum -= ((Constant *)f->args[i])->value;
-                destroy(f->args[i]);
             }
         } else
         {
@@ -797,6 +809,7 @@ EVALABLE *optimizeSumChain(SumChain *f)
     }
     if (constantSum != 0)
     {
+        destroySumChain(f);
         addSumChainArg(optimized, (EVALABLE *)createConstant(constantSum), 1);
     }
     return (EVALABLE *)optimized;
@@ -849,8 +862,7 @@ EVALABLE *optimizeExponential(Exponential *e)
     {
         double base = ((Constant *)e->base)->value;
         double exponent = ((Constant *)e->exponent)->value;
-        destroy(e->base);
-        destroy(e->exponent);
+        destroyExponential(e);
         return (EVALABLE *)createConstant(pow(base, exponent));
     }
     return (EVALABLE *)e;
@@ -864,8 +876,7 @@ EVALABLE *optimizeLogarithm(Logarithm *l)
     {
         double base = ((Constant *)l->base)->value;
         double value = ((Constant *)l->value)->value;
-        destroy(l->base);
-        destroy(l->value);
+        destroyLogarithm(l);
         return (EVALABLE *)createConstant(log(value) / log(base));
     }
     return (EVALABLE *)l;
@@ -877,7 +888,6 @@ EVALABLE *optimizeTrigonometric(Trigonometric *t)
     if (EVALTYPE(t->arg) == CONSTANT)
     {
         double val = ((Constant *)t->arg)->value;
-        destroy(t->arg);
         double result;
         switch (t->trigType)
         {
@@ -912,7 +922,6 @@ EVALABLE *optimizeInverseTrigonometric(InverseTrigonometric *it)
     if (EVALTYPE(it->arg) == CONSTANT)
     {
         double val = ((Constant *)it->arg)->value;
-        destroy(it->arg);
         double result;
         switch (it->trigType)
         {
@@ -1036,7 +1045,7 @@ char *parseInsideParantheses(char *input, EVALABLE **e, StatusCode *s)
     }
     char *insideParantheses = (char *)malloc(i);
     strncpy(insideParantheses, input+1, i-2);
-    insideParantheses[i] = '\0';
+    insideParantheses[i-1] = '\0';
     input += i;
     parseExpression(insideParantheses, e, s);
     free(insideParantheses);
@@ -1089,7 +1098,7 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
     int isPositive = 1;
     int isDivided = 0;
     int isArgAvailable = 0;
-    while (input[0])
+    while (input[0] != '\0')
     {
         if (input[0] == ' ')
         {
