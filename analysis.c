@@ -1902,6 +1902,11 @@ void swapColumns(Matrix *m, int c1, int c2)
 
 Matrix *gauusElimination(Matrix *m)
 {
+    if (m->rows != m->cols - 1)
+    {
+        return NULL;
+    }
+
     Matrix *copy = copyMatrix(m);
     Matrix *result = createMatrix(m->rows, 1);
 
@@ -1945,6 +1950,11 @@ Matrix *gauusElimination(Matrix *m)
 
 Matrix *gauusSeidel(Matrix *m, double epsilon)
 {
+    if (m->rows != m->cols - 1)
+    {
+        return NULL;
+    }
+
     Matrix *copy = copyMatrix(m);
     Matrix *result = createMatrix(m->rows, 1);
     Matrix *converged = createMatrix(m->rows, 1);
