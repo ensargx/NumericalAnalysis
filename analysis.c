@@ -30,8 +30,6 @@ typedef struct _StatusCode {
     char *pos;
 } StatusCode;
 
-/* Enumerations */
-
 typedef enum _EvalAbleType {
     CONSTANT,
     VARIABLE,
@@ -2026,6 +2024,120 @@ double numericalDifferentiation(EVALABLE *f, double x, double h)
     return (evaluate(f, x + h) - evaluate(f, x)) / h;
 }
 
+int mainBisection()
+{
+    EVALABLE *f;
+    printf("Enter your function: ");
+    char input[256];
+    // clear buffer 
+    while (getchar() != '\n');
+    if (fgets(input, 256, stdin) == NULL)
+    {
+        printf("Failed to read input.\n");
+        return 1;
+    }
+    input[strlen(input) - 1] = '\0';
+    StatusCode status;
+    status.code = 0;
+    status.pos = NULL;
+    status.expected = '\0';
+    parseExpression(input, &f, &status);
+    if (status.code != 0)
+    {
+        int pos = status.pos - input + 1;
+        switch (status.code)
+        {
+            case 1:
+                printf("[Failed to parse]   ");
+                for (int i = 0; i < pos; i++)
+                {
+                    printf(" ");
+                }
+                printf("^ Unexpected character.\n");
+                break;
+            case 2:
+                printf("[Failed to parse]   ");
+                for (int i = 0; i < pos; i++)
+                {
+                    printf(" ");
+                }
+                printf("^ Expected '%c', received '%c'\n", status.expected, *status.pos);
+                break;
+        }
+        return 1;
+    }
+    f = optimize(f);
+    printf("[Optimized] f(x) = ");
+    print(f);
+    printf("\n");
+
+    double a, b, epsilon;
+    printf("Enter the interval [a, b]: ");
+    scanf("%Lf %Lf", &a, &b);
+    printf("Enter the error tolerance: ");
+    scanf("%Lf", &epsilon);
+
+    double result = solveBisection(f, a, b, epsilon);
+    if (__inline_isnanl(result))
+    {
+        printf("No root found in the interval.\n");
+    }
+    else
+    {
+        printf("Root: %Lf\n", result);
+    }
+
+    destroy(f);
+
+    return 0;
+}
+
+int mainRegulaFalsi()
+{
+
+    return 0;
+}
+
+int mainNewtonRaphson()
+{
+    return 0;
+}
+
+int mainMatrixInverse()
+{
+    return 0;
+}
+
+int mainGauusElimination()
+{
+    return 0;
+}
+
+int mainGauusSeidel()
+{
+    return 0;
+}
+
+int mainNumericalDifferentiation()
+{
+    return 0;
+}
+
+int mainSimpson()
+{
+    return 0;
+}
+
+int mainTrapez()
+{
+    return 0;
+}
+
+int mainGregoryNewton()
+{
+    return 0;
+}
+
 int main()
 {
     char banner[] = 
@@ -2045,7 +2157,50 @@ int main()
 " |___|                                       byEnsarGok|___| \n"
 "(_____)-----------------------------------------------(_____)\n";
 
+    char options[] =
+"Select an option:\n"
+"1. Bisection\n"
+"2. Regula Falsi\n"
+"3. Newton-Raphson\n"
+"4. NxN Matrix inverse\n"
+"5. Gauus Elimination\n"
+"6. Gauus Seidel\n"
+"7. Numerical Differentiation\n"
+"8. Simpson's method\n"
+"9. Trapez Rule\n"
+"10. Gregory Newton enterpolation\n";
+
     printf("%s", banner);
+    int option;
+    printf("%s", options);
+    scanf("%d", &option);
+
+    switch (option)
+    {
+        case 1:
+            return mainBisection();
+        case 2:
+            return mainRegulaFalsi();
+        case 3:
+            return mainNewtonRaphson();
+        case 4:
+            return mainMatrixInverse();
+        case 5:
+            return mainGauusElimination();
+        case 6:
+            return mainGauusSeidel();
+        case 7:
+            return mainNumericalDifferentiation();
+        case 8:
+            return mainSimpson();
+        case 9:
+            return mainTrapez();
+        case 10:
+            return mainGregoryNewton();
+        default:
+            printf("Invalid option.\n");
+            return 1;
+    }
 
     int rows, cols;
     printf("Enter the number of rows and columns: ");
