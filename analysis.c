@@ -1466,9 +1466,41 @@ typedef struct
     double **data;
 } Matrix;
 
+/* 
+ * Create a matrix and initialize the values to 0
+ *
+ * Parameters:
+ * - rows: The number of rows
+ * - cols: The number of columns
+ * Returns:
+ * - The created matrix
+*/
 Matrix *createMatrix(int rows, int cols);
+
+/* 
+ * Destroy a matrix and free the memory
+ *
+ * Parameters:
+ * - m: The matrix to be destroyed
+*/
 void destroyMatrix(Matrix *m);
+
+/* 
+ * Print the matrix to the console
+ *
+ * Parameters:
+ * - m: The matrix to be printed
+*/
 void printMatrix(Matrix *m);
+
+/* 
+ * Copy a matrix
+ *
+ * Parameters:
+ * - m: The matrix to be copied
+ * Returns:
+ * - The copied matrix
+*/
 Matrix *copyMatrix(Matrix *m);
 
 /* 
@@ -1616,9 +1648,17 @@ void swapColumns(Matrix *m, int c1, int c2);
  * - The solution matrix
 */
 Matrix *gauusElimination(Matrix *m);
+
+/* 
+ * Solve a linear system of equations using Gauus-Seidel method
+ *
+ * Parameters:
+ * - m: The augmented matrix
+ * - epsilon: The error tolerance
+ * Returns:
+ * - The solution matrix
+*/
 Matrix *gauusSeidel(Matrix *m, double epsilon);
-
-
 
 
 Matrix *createMatrix(int rows, int cols)
@@ -1903,6 +1943,63 @@ Matrix *gauusElimination(Matrix *m)
     return result;
 }
 
+Matrix *gauusSeidel(Matrix *m, double epsilon)
+{
+    Matrix *copy = copyMatrix(m);
+    Matrix *result = createMatrix(m->rows, 1);
+    Matrix *converged = createMatrix(m->rows, 1);
+    int convergedCount = 0;
+
+    // Make sure the biggest element in each row is on the diagonal
+    for (int i = 0; i < copy->cols - 1; i++)
+    {
+        double max = 0;
+        int maxIndex = 0;
+        for (int j = i; j < copy->rows; j++)
+        {
+            if (ABS(copy->data[j][i]) > max)
+            {
+                max = ABS(copy->data[j][i]);
+                maxIndex = j;
+            }
+        }
+        if (maxIndex != i)
+        {
+            swapRows(copy, i, maxIndex);
+        }
+    }
+
+    while (convergedCount < m->rows)
+    {
+        for (int i = 0; i < copy->rows; i++)
+        {
+            double sum = copy->data[i][copy->cols - 1];
+            for (int j = 0; j < copy->cols - 1; j++)
+            {
+                if (j != i)
+                {
+                    sum -= copy->data[i][j] * result->data[j][0];
+                }
+            }
+            result->data[i][0] = sum / copy->data[i][i];
+        }
+
+        for (int i = 0; i < copy->rows; i++)
+        {
+            if (ABS(result->data[i][0] - converged->data[i][0]) < epsilon)
+            {
+                convergedCount++;
+            }
+            converged->data[i][0] = result->data[i][0];
+        }
+    }
+
+    destroyMatrix(copy);
+    destroyMatrix(converged);
+
+    return result;
+}
+
 int main()
 {
     char banner[] = 
@@ -1938,8 +2035,8 @@ int main()
     }
 
     printMatrix(m);
-    printf("Gauus Elimination\n");
-    Matrix *result = gauusElimination(m); 
+    printf("Gauus Seidal\n");
+    Matrix *result = gauusSeidel(m, 0.000001);
     printMatrix(result);
 
     destroyMatrix(m);
