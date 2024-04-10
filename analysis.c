@@ -1457,7 +1457,395 @@ double integrateSimpson38(EVALABLE *e, double a, double b, int n)
     return sum;
 }
 
-/* Matrix functions */
+/* Matrix implementation */
+
+typedef struct
+{
+    int rows;
+    int cols;
+    double **data;
+} Matrix;
+
+Matrix *createMatrix(int rows, int cols);
+void destroyMatrix(Matrix *m);
+void printMatrix(Matrix *m);
+Matrix *copyMatrix(Matrix *m);
+
+/* 
+ * Add two matrices. m1 + scalar * m2
+ *
+ * Parameters:
+ * - m1: The first matrix
+ * - m2: The second matrix
+ * - scalar: The scalar to multiply the second matrix
+ * Returns:
+ * - The result of the addition
+*/
+Matrix *addMatrix(Matrix *m1, Matrix *m2, double scalar);
+
+/* 
+ * Multiply two matrices. m1 * m2
+ *
+ * Parameters:
+ * - m1: The first matrix
+ * - m2: The second matrix
+ * Returns:
+ * - The result of the multiplication
+*/
+
+/* 
+ * Multiply a matrix with a scalar. scalar * m
+ *
+ * Parameters:
+ * - m: The matrix
+ * - scalar: The scalar
+ * Returns:
+ * - The result of the multiplication
+*/
+Matrix *multiplyMatrix(Matrix *m1, Matrix *m2);
+
+/* 
+ * Transpose a matrix
+ *
+ * Parameters:
+ * - m: The matrix
+ * Returns:
+ * - The transposed matrix
+*/
+Matrix *transposeMatrix(Matrix *m);
+
+/* 
+ * Inverse of a matrix
+ *
+ * Parameters:
+ * - m: The matrix
+ * Returns:
+ * - The inverse of the matrix
+*/
+Matrix *inverseMatrix(Matrix *m);
+
+/* 
+ * Solve a linear system of equations
+ *
+ * Parameters:
+ * - A: The coefficient matrix
+ * - B: The constant matrix
+ * Returns:
+ * - The solution matrix
+*/
+Matrix *solveLinearSystem(Matrix *A, Matrix *B);
+
+/* 
+ * Calculate the determinant of a matrix
+ *
+ * Parameters:
+ * - m: The matrix
+ * Returns:
+ * - The determinant of the matrix
+*/
+double determinantMatrix(Matrix *m);
+
+/* 
+ * Add a row to another row. r1 = r1 + scalar * r2
+ *
+ * Parameters:
+ * - m: The matrix
+ * - r1: The row to be added
+ * - r2: The row to be added
+ * - scalar: The scalar to multiply the row to be added
+*/
+void addRow(Matrix *m, int r1, int r2, double scalar);
+
+/* 
+ * Multiply a row with a scalar. r = scalar * r
+ *
+ * Parameters:
+ * - m: The matrix
+ * - r: The row to be multiplied
+ * - scalar: The scalar to multiply the row
+*/
+void multiplyRow(Matrix *m, int r, double scalar); 
+
+/* 
+ * Swap two rows. r1 <-> r2
+ *
+ * Parameters:
+ * - m: The matrix
+ * - r1: The first row
+ * - r2: The second row
+*/
+void swapRows(Matrix *m, int r1, int r2); 
+
+/* 
+ * Add a column to another column. c1 = c1 + scalar * c2
+ *
+ * Parameters:
+ * - m: The matrix
+ * - c1: The column to be added
+ * - c2: The column to be added
+ * - scalar: The scalar to multiply the column to be added
+*/
+void addColumn(Matrix *m, int c1, int c2, double scalar);
+
+/* 
+ * Multiply a column with a scalar. c = scalar * c
+ *
+ * Parameters:
+ * - m: The matrix
+ * - c: The column to be multiplied
+ * - scalar: The scalar to multiply the column
+*/
+void multiplyColumn(Matrix *m, int c, double scalar);
+
+/* 
+ * Swap two columns. c1 <-> c2
+ *
+ * Parameters:
+ * - m: The matrix
+ * - c1: The first column
+ * - c2: The second column
+*/
+void swapColumns(Matrix *m, int c1, int c2);
+
+Matrix *createMatrix(int rows, int cols)
+{
+    Matrix *m = (Matrix *)malloc(sizeof(Matrix));
+    m->rows = rows;
+    m->cols = cols;
+    m->data = (double **)malloc(rows * sizeof(double *));
+    for (int i = 0; i < rows; i++)
+    {
+        m->data[i] = (double *)malloc(cols * sizeof(double));
+        for (int j = 0; j < cols; j++)
+        {
+            m->data[i][j] = 0;
+        }
+    }
+    return m;
+}
+
+void destroyMatrix(Matrix *m)
+{
+    for (int i = 0; i < m->rows; i++)
+    {
+        free(m->data[i]);
+    }
+    free(m->data);
+    free(m);
+}
+
+void printMatrix(Matrix *m)
+{
+    for (int i = 0; i < m->rows; i++)
+    {
+        for (int j = 0; j < m->cols; j++)
+        {
+            printf("%Lf ", m->data[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+Matrix *copyMatrix(Matrix *m)
+{
+    Matrix *copy = createMatrix(m->rows, m->cols);
+    for (int i = 0; i < m->rows; i++)
+    {
+        for (int j = 0; j < m->cols; j++)
+        {
+            copy->data[i][j] = m->data[i][j];
+        }
+    }
+    return copy;
+}
+
+Matrix *addMatrix(Matrix *m1, Matrix *m2, double scalar)
+{
+    if (m1->rows != m2->rows || m1->cols != m2->cols)
+    {
+        return NULL;
+    }
+    Matrix *result = createMatrix(m1->rows, m1->cols);
+    for (int i = 0; i < m1->rows; i++)
+    {
+        for (int j = 0; j < m1->cols; j++)
+        {
+            result->data[i][j] = m1->data[i][j] + scalar * m2->data[i][j];
+        }
+    }
+    return result;
+}
+
+Matrix *multiplyMatrix(Matrix *m1, Matrix *m2)
+{
+    if (m1->cols != m2->rows)
+    {
+        return NULL;
+    }
+    Matrix *result = createMatrix(m1->rows, m2->cols);
+    for (int i = 0; i < m1->rows; i++)
+    {
+        for (int j = 0; j < m2->cols; j++)
+        {
+            for (int k = 0; k < m1->cols; k++)
+            {
+                result->data[i][j] += m1->data[i][k] * m2->data[k][j];
+            }
+        }
+    }
+    return result;
+}
+
+Matrix *transposeMatrix(Matrix *m)
+{
+    Matrix *result = createMatrix(m->cols, m->rows);
+    for (int i = 0; i < m->rows; i++)
+    {
+        for (int j = 0; j < m->cols; j++)
+        {
+            result->data[j][i] = m->data[i][j];
+        }
+    }
+    return result;
+}
+
+Matrix *inverseMatrix(Matrix *m)
+{
+    if (m->rows != m->cols)
+    {
+        return NULL;
+    }
+
+    if (determinantMatrix(m) == 0)
+    {
+        return NULL;
+    }
+
+    Matrix *identity = createMatrix(m->rows, m->cols);
+    for (int i = 0; i < m->rows; i++)
+    {
+        identity->data[i][i] = 1;
+    }
+
+    Matrix *result = copyMatrix(m);
+    for (int i = 0; i < result->rows; i++)
+    {
+        double pivot = result->data[i][i];
+        if (pivot == 0)
+        {
+            for (int j = i + 1; j < result->rows; j++)
+            {
+                if (result->data[j][i] != 0)
+                {
+                    swapRows(result, i, j);
+                    swapRows(identity, i, j);
+                    break;
+                }
+            }
+            pivot = result->data[i][i];
+        }
+        multiplyRow(result, i, 1 / pivot);
+        multiplyRow(identity, i, 1 / pivot);
+        for (int j = 0; j < result->rows; j++)
+        {
+            if (j != i)
+            {
+                double scalar = -result->data[j][i];
+                addRow(result, j, i, scalar);
+                addRow(identity, j, i, scalar);
+            }
+        }
+    }
+    destroyMatrix(result);
+    return identity;
+} 
+
+double determinantMatrix(Matrix *m)
+{
+    if (m->rows != m->cols)
+    {
+        return NAN;
+    }
+
+    if (m->rows == 1)
+    {
+        return m->data[0][0];
+    }
+
+    double det = 0;
+    for (int i = 0; i < m->rows; i++)
+    {
+        Matrix *minor = createMatrix(m->rows - 1, m->cols - 1);
+        for (int j = 1; j < m->rows; j++)
+        {
+            for (int k = 0; k < m->cols; k++)
+            {
+                if (k < i)
+                {
+                    minor->data[j - 1][k] = m->data[j][k];
+                } else if (k > i)
+                {
+                    minor->data[j - 1][k - 1] = m->data[j][k];
+                }
+            }
+        }
+        double sign = (i % 2 == 0) ? 1 : -1;
+        det += sign * m->data[0][i] * determinantMatrix(minor);
+        destroyMatrix(minor);
+    }
+
+    return det;
+}
+
+void addRow(Matrix *m, int r1, int r2, double scalar)
+{
+    for (int i = 0; i < m->cols; i++)
+    {
+        m->data[r1][i] += scalar * m->data[r2][i];
+    }
+}
+
+void multiplyRow(Matrix *m, int r, double scalar)
+{
+    for (int i = 0; i < m->cols; i++)
+    {
+        m->data[r][i] *= scalar;
+    }
+}
+
+void swapRows(Matrix *m, int r1, int r2)
+{
+    double *temp = m->data[r1];
+    m->data[r1] = m->data[r2];
+    m->data[r2] = temp;
+}
+
+void addColumn(Matrix *m, int c1, int c2, double scalar)
+{
+    for (int i = 0; i < m->rows; i++)
+    {
+        m->data[i][c1] += scalar * m->data[i][c2];
+    }
+}
+
+void multiplyColumn(Matrix *m, int c, double scalar)
+{
+    for (int i = 0; i < m->rows; i++)
+    {
+        m->data[i][c] *= scalar;
+    }
+}
+
+void swapColumns(Matrix *m, int c1, int c2)
+{
+    for (int i = 0; i < m->rows; i++)
+    {
+        double temp = m->data[i][c1];
+        m->data[i][c1] = m->data[i][c2];
+        m->data[i][c2] = temp;
+    }
+}
+
 
 int main()
 {
@@ -1479,6 +1867,24 @@ int main()
 "(_____)-----------------------------------------------(_____)\n";
 
     printf("%s", banner);
+
+
+    Matrix *m = createMatrix(3, 3);
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            scanf("%Lf", &m->data[i][j]);
+        }
+    }
+
+    printMatrix(m);
+    printf("Inverse:\n"); 
+    Matrix *inverse = inverseMatrix(m);
+    printMatrix(inverse);
+    destroyMatrix(m);
+
+    return 0;
 
     // success code, 0 means no error
     // first byte of the input is the error code
