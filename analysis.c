@@ -2000,6 +2000,22 @@ Matrix *gauusSeidel(Matrix *m, double epsilon)
     return result;
 }
 
+/* 
+ * Calculate the derivative of a function at a point using numerical
+ * differentiation method.
+ *
+ * Parameters:
+ * - f: The function
+ * - x: The point
+ * - h: The step size
+ * Returns:
+ * - The derivative of the function at the point
+*/ 
+double numericalDifferentiation(EVALABLE *f, double x, double h)
+{
+    return (evaluate(f, x + h) - evaluate(f, x)) / h;
+}
+
 int main()
 {
     char banner[] = 
