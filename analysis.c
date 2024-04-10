@@ -1924,8 +1924,11 @@ int main()
 
     printf("%s", banner);
 
+    int rows, cols;
+    printf("Enter the number of rows and columns: ");
+    scanf("%d %d", &rows, &cols);
 
-    Matrix *m = createMatrix(3, 4);
+    Matrix *m = createMatrix(rows, cols);
     for (int i = 0; i < m->rows; i++)
     {
         for (int j = 0; j < m->cols; j++)
