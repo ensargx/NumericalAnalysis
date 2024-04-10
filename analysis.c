@@ -1607,6 +1607,20 @@ void multiplyColumn(Matrix *m, int c, double scalar);
 */
 void swapColumns(Matrix *m, int c1, int c2);
 
+/* 
+ * Solve a linear system of equations using Gaussian elimination
+ *
+ * Parameters:
+ * - m: The augmented matrix
+ * Returns:
+ * - The solution matrix
+*/
+Matrix *gauusElimination(Matrix *m);
+Matrix *gauusSeidel(Matrix *m, double epsilon);
+
+
+
+
 Matrix *createMatrix(int rows, int cols)
 {
     Matrix *m = (Matrix *)malloc(sizeof(Matrix));
@@ -1846,6 +1860,48 @@ void swapColumns(Matrix *m, int c1, int c2)
     }
 }
 
+Matrix *gauusElimination(Matrix *m)
+{
+    Matrix *copy = copyMatrix(m);
+    Matrix *result = createMatrix(m->rows, 1);
+
+    // Upper triangular form 
+    for (int i = 0; i < copy->rows; i++)
+    {
+        double pivot = copy->data[i][i];
+        if (pivot == 0)
+        {
+            for (int j = i + 1; j < copy->rows; j++)
+            {
+                if (copy->data[j][i] != 0)
+                {
+                    swapRows(copy, i, j);
+                    break;
+                }
+            }
+            pivot = copy->data[i][i];
+        }
+        multiplyRow(copy, i, 1 / pivot);
+        for (int j = i + 1; j < copy->rows; j++)
+        {
+            double scalar = -copy->data[j][i];
+            addRow(copy, j, i, scalar);
+        }
+    }
+
+    for (int i = copy->rows - 1; i >= 0; i--)
+    {
+        result->data[i][0] = copy->data[i][copy->cols - 1];
+        for (int j = i + 1; j < copy->cols - 1; j++)
+        {
+            result->data[i][0] -= copy->data[i][j] * result->data[j][0];
+        }
+    }
+
+    destroyMatrix(copy);
+
+    return result;
+}
 
 int main()
 {
@@ -1869,20 +1925,22 @@ int main()
     printf("%s", banner);
 
 
-    Matrix *m = createMatrix(3, 3);
-    for (int i = 0; i < 3; i++)
+    Matrix *m = createMatrix(3, 4);
+    for (int i = 0; i < m->rows; i++)
     {
-        for (int j = 0; j < 3; j++)
+        for (int j = 0; j < m->cols; j++)
         {
             scanf("%Lf", &m->data[i][j]);
         }
     }
 
     printMatrix(m);
-    printf("Inverse:\n"); 
-    Matrix *inverse = inverseMatrix(m);
-    printMatrix(inverse);
+    printf("Gauus Elimination\n");
+    Matrix *result = gauusElimination(m); 
+    printMatrix(result);
+
     destroyMatrix(m);
+    destroyMatrix(result);
 
     return 0;
 
