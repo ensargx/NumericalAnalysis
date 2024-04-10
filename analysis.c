@@ -2024,17 +2024,17 @@ double numericalDifferentiation(EVALABLE *f, double x, double h)
     return (evaluate(f, x + h) - evaluate(f, x)) / h;
 }
 
-int mainBisection()
+EVALABLE *getFunction()
 {
     EVALABLE *f;
     printf("Enter your function: ");
     char input[256];
-    // clear buffer 
+    // clear buffer
     while (getchar() != '\n');
     if (fgets(input, 256, stdin) == NULL)
     {
         printf("Failed to read input.\n");
-        return 1;
+        return NULL;
     }
     input[strlen(input) - 1] = '\0';
     StatusCode status;
@@ -2064,12 +2064,18 @@ int mainBisection()
                 printf("^ Expected '%c', received '%c'\n", status.expected, *status.pos);
                 break;
         }
-        return 1;
+        return NULL;
     }
     f = optimize(f);
     printf("[Optimized] f(x) = ");
     print(f);
     printf("\n");
+    return f;
+}
+
+int mainBisection()
+{
+    EVALABLE *f = getFunction();
 
     double a, b, epsilon;
     printf("Enter the interval [a, b]: ");
@@ -2078,7 +2084,7 @@ int mainBisection()
     scanf("%Lf", &epsilon);
 
     double result = solveBisection(f, a, b, epsilon);
-    if (__inline_isnanl(result))
+    if (isnan(result))
     {
         printf("No root found in the interval.\n");
     }
@@ -2094,47 +2100,233 @@ int mainBisection()
 
 int mainRegulaFalsi()
 {
+    EVALABLE *f = getFunction();
+
+    double a, b, epsilon;
+    printf("Enter the interval [a, b]: ");
+    scanf("%Lf %Lf", &a, &b);
+    printf("Enter the error tolerance: ");
+    scanf("%Lf", &epsilon);
+
+    double result = solveRegulaFalsi(f, a, b, epsilon);
+    if (isnan(result))
+    {
+        printf("No root found in the interval.\n");
+    }
+    else
+    {
+        printf("Root: %Lf\n", result);
+    }
+
+    destroy(f);
 
     return 0;
 }
 
 int mainNewtonRaphson()
 {
+    EVALABLE *f = getFunction();
+
+    double x0, epsilon;
+    printf("Enter the initial guess: ");
+    scanf("%Lf", &x0);
+    printf("Enter the error tolerance: ");
+    scanf("%Lf", &epsilon);
+
+    double result = solveNewtonRaphson(f, x0, epsilon);
+    printf("Root: %Lf\n", result);
+
+    destroy(f);
+
     return 0;
 }
 
 int mainMatrixInverse()
 {
+    int rows, cols;
+    printf("Enter the number of rows and columns: ");
+    scanf("%d %d", &rows, &cols);
+
+    if (rows != cols)
+    {
+        printf("The matrix must be square.\n");
+        return 1;
+    }
+
+    printf("Enter the matrix:\n");
+    Matrix *m = createMatrix(rows, cols);
+    for (int i = 0; i < m->rows; i++)
+    {
+        for (int j = 0; j < m->cols; j++)
+        {
+            scanf("%Lf", &m->data[i][j]);
+        }
+    }
+
+    Matrix *result = inverseMatrix(m);
+    if (result == NULL)
+    {
+        printf("The matrix is singular.\n");
+    }
+    else
+    {
+        printMatrix(result);
+    }
+
+    destroyMatrix(m);
+
     return 0;
 }
 
 int mainGauusElimination()
 {
+    int rows, cols;
+    printf("Enter the number of rows and columns: ");
+    scanf("%d %d", &rows, &cols);
+    if (rows != cols - 1)
+    {
+        printf("The matrix must be augmented.\n");
+        return 1;
+    }
+
+    printf("Enter the augmented matrix:\n");
+    Matrix *m = createMatrix(rows, cols);
+    for (int i = 0; i < m->rows; i++)
+    {
+        for (int j = 0; j < m->cols; j++)
+        {
+            scanf("%Lf", &m->data[i][j]);
+        }
+    }
+
+    Matrix *result = gauusElimination(m);
+    if (result == NULL)
+    {
+        printf("The matrix is singular.\n");
+    }
+    else
+    {
+        printMatrix(result);
+    }
+
+    destroyMatrix(m);
+
     return 0;
 }
 
 int mainGauusSeidel()
 {
+    int rows, cols;
+    printf("Enter the number of rows and columns: ");
+    scanf("%d %d", &rows, &cols);
+    if (rows != cols - 1)
+    {
+        printf("The matrix must be augmented.\n");
+        return 1;
+    }
+
+    printf("Enter the augmented matrix:\n");
+    Matrix *m = createMatrix(rows, cols);
+    for (int i = 0; i < m->rows; i++)
+    {
+        for (int j = 0; j < m->cols; j++)
+        {
+            scanf("%Lf", &m->data[i][j]);
+        }
+    }
+
+    double epsilon;
+    printf("Enter the error tolerance: ");
+    scanf("%Lf", &epsilon);
+
+    Matrix *result = gauusSeidel(m, epsilon);
+    printMatrix(result);
+
+    destroyMatrix(m);
+    destroyMatrix(result);
+
     return 0;
 }
 
 int mainNumericalDifferentiation()
 {
+    EVALABLE *f = getFunction();
+
+    double x, h;
+    printf("Enter the point: ");
+    scanf("%Lf", &x);
+    printf("Enter the step size: ");
+    scanf("%Lf", &h);
+
+    double result = numericalDifferentiation(f, x, h);
+    printf("Derivative: %Lf\n", result);
+
+    destroy(f);
+
     return 0;
 }
 
 int mainSimpson()
 {
+    printf("Enter which method to use:\n");
+    printf("1. Simpson's 1/3 rule\n");
+    printf("2. Simpson's 3/8 rule\n");
+    int option;
+    scanf("%d", &option);
+
+    EVALABLE *f = getFunction();
+
+    double a, b;
+    int n;
+    printf("Enter the interval [a, b]: ");
+    scanf("%Lf %Lf", &a, &b);
+    printf("Enter the number of subintervals: ");
+    scanf("%d", &n);
+
+    double result;
+    if (option == 1)
+    {
+        result = integrateSimpson13(f, a, b, n);
+    }
+    else if (option == 2)
+    {
+        result = integrateSimpson38(f, a, b, n);
+    }
+    else
+    {
+        printf("Invalid option.\n");
+        return 1;
+    }
+
+    printf("Integral: %Lf\n", result);
+
+    destroy(f);
+
     return 0;
 }
 
 int mainTrapez()
 {
+    EVALABLE *f = getFunction();
+
+    double a, b;
+    int n;
+    printf("Enter the interval [a, b]: ");
+    scanf("%Lf %Lf", &a, &b);
+    printf("Enter the number of subintervals: ");
+    scanf("%d", &n);
+
+    double result = integrateTrapez(f, a, b, n);
+    printf("Integral: %Lf\n", result);
+
+    destroy(f);
+
     return 0;
 }
 
 int mainGregoryNewton()
 {
+    // TODO: Implement Gregory Newton interpolation
     return 0;
 }
 
