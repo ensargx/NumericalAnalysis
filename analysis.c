@@ -1382,7 +1382,11 @@ double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon)
     {
         c = (a * fb - b * fa) / (fb - fa);
         double fc = evaluate(e, c);
-        if (fa * fc < 0)
+        if (fc == 0)
+        {
+            return c;
+        }
+        else if (fa * fc < 0)
         {
             b = c;
             fb = fc;
