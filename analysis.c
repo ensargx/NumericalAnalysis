@@ -12,14 +12,14 @@
 
 #define EVALABLE void*
 
-#ifndef MAX_FUNC_ARGS
-#define MAX_FUNC_ARGS 16
+#ifndef INIT_CHAIN_ARGS
+#define INIT_CHAIN_ARGS 4
 #endif
 
-#define double long double
+typedef long double ldouble_t;
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
-double evaluate(EVALABLE *e, double value);
+ldouble_t evaluate(EVALABLE *e, ldouble_t value);
 #define EVALTYPE(x) ((EvalAble *)x)->type
 #define UNUSED(x) (void)(x)
 
@@ -59,7 +59,7 @@ typedef struct _EvalAble {
 
 typedef struct _Constant {
     EvalAbleType type;
-    double value;
+    ldouble_t value;
 } Constant;
 
 typedef struct _Variable {
@@ -69,15 +69,17 @@ typedef struct _Variable {
 typedef struct _SumChain {
     EvalAbleType type;
     int argCount;
-    EVALABLE *args[MAX_FUNC_ARGS];
-    int isPositive[MAX_FUNC_ARGS];
+    int maxArgs;
+    EVALABLE **args;
+    int *isPositive;
 } SumChain;
 
 typedef struct _MulChain {
     EvalAbleType type;
     int argCount;
-    EVALABLE *args[MAX_FUNC_ARGS];
-    int isDivided[MAX_FUNC_ARGS];
+    int maxArgs;
+    EVALABLE **args;
+    int *isDivided;
 } MulChain;
 
 typedef struct _Exponential {
@@ -125,47 +127,47 @@ typedef struct _Logarithm {
 /* SumChain prototypes */
 Variable *createVariable();
 void destroyVariable(Variable *v);
-double evaluateVariable(Variable *v, double value);
+ldouble_t evaluateVariable(Variable *v, ldouble_t value);
 void printVariable(Variable *v);
 
-Constant *createConstant(double value);
+Constant *createConstant(ldouble_t value);
 void destroyConstant(Constant *c);
-double evaluateConstant(Constant *c, double value);
+ldouble_t evaluateConstant(Constant *c, ldouble_t value);
 void printConstant(Constant *c);
 
 Exponential *createExponential(EVALABLE *base, EVALABLE *exponent);
 void destroyExponential(Exponential *e);
-double evaluateExponential(Exponential *e, double value);
+ldouble_t evaluateExponential(Exponential *e, ldouble_t value);
 void printExponential(Exponential *e);
 
 Logarithm *createLogarithm(EVALABLE *base, EVALABLE *value);
 void destroyLogarithm(Logarithm *l);
-double evaluateLogarithm(Logarithm *l, double value);
+ldouble_t evaluateLogarithm(Logarithm *l, ldouble_t value);
 void printLogarithm(Logarithm *l);
 
 SumChain *createSumChain();
 void addSumChainArg(SumChain *f, EVALABLE *argType, int sign);
 void destroySumChain(SumChain *f);
-double evaluateSumChain(SumChain *f, double value);
+ldouble_t evaluateSumChain(SumChain *f, ldouble_t value);
 void printSumChain(SumChain *f);
 
 MulChain *createMulChain();
 void addMulChainArg(MulChain *m, EVALABLE *arg, int isDivided);
 void destroyMulChain(MulChain *m);
-double evaluateMulChain(MulChain *m, double value);
+ldouble_t evaluateMulChain(MulChain *m, ldouble_t value);
 void printMulChain(MulChain *m);
 
 Trigonometric *createTrigonometric(TrigonometricType type, EVALABLE *arg);
 void destroyTrigonometric(Trigonometric *t);
-double evaluateTrigonometric(Trigonometric *t, double value);
+ldouble_t evaluateTrigonometric(Trigonometric *t, ldouble_t value);
 void printTrigonometric(Trigonometric *t);
 
 InverseTrigonometric *createInverseTrigonometric(InverseTrigonometricType type, EVALABLE *arg);
 void destroyInverseTrigonometric(InverseTrigonometric *it);
-double evaluateInverseTrigonometric(InverseTrigonometric *it, double value);
+ldouble_t evaluateInverseTrigonometric(InverseTrigonometric *it, ldouble_t value);
 void printInverseTrigonometric(InverseTrigonometric *it);
 
-double evaluate(EVALABLE *e, double value);
+ldouble_t evaluate(EVALABLE *e, ldouble_t value);
 void destroy(EVALABLE *e);
 void print(EVALABLE *e);
 
@@ -185,7 +187,7 @@ void destroyVariable(Variable *v)
     free(v);
 }
 
-double evaluateVariable(Variable *v, double value)
+ldouble_t evaluateVariable(Variable *v, ldouble_t value)
 {
     UNUSED(v);
     return value;
@@ -203,7 +205,10 @@ MulChain *createMulChain()
     MulChain *m = (MulChain *)malloc(sizeof(MulChain));
     m->type = MUL_CHAIN;
     m->argCount = 0;
-    for (int i = 0; i < MAX_FUNC_ARGS; i++)
+    m->maxArgs = INIT_CHAIN_ARGS;
+    m->args = (EVALABLE **)calloc(m->maxArgs, sizeof(EVALABLE *));
+    m->isDivided = (int *)calloc(m->maxArgs, sizeof(int));
+    for (int i = 0; i < m->maxArgs; i++)
     {
         m->args[i] = NULL;
         m->isDivided[i] = 0;
@@ -213,6 +218,12 @@ MulChain *createMulChain()
 
 void addMulChainArg(MulChain *m, EVALABLE *arg, int isDivided)
 {
+    if (m->argCount >= m->maxArgs)
+    {
+        m->maxArgs *= 2;
+        m->args = (EVALABLE **)realloc(m->args, m->maxArgs * sizeof(EVALABLE *));
+        m->isDivided = (int *)realloc(m->isDivided, m->maxArgs * sizeof(int));
+    }
     m->args[m->argCount] = arg;
     m->isDivided[m->argCount] = isDivided;
     m->argCount++;
@@ -224,12 +235,14 @@ void destroyMulChain(MulChain *m)
     {
         destroy(m->args[i]);
     }
+    free(m->args);
+    free(m->isDivided);
     free(m);
 }
 
-double evaluateMulChain(MulChain *m, double value)
+ldouble_t evaluateMulChain(MulChain *m, ldouble_t value)
 {
-    double result = 1;
+    ldouble_t result = 1;
     for (int i = 0; i < m->argCount && m->args[i] != NULL; i++)
     {
         if (m->isDivided[i] == 1)
@@ -260,7 +273,7 @@ void printMulChain(MulChain *m)
 }
 
 // Constant functions
-Constant *createConstant(double value)
+Constant *createConstant(ldouble_t value)
 {
     Constant *c = (Constant *)malloc(sizeof(Constant));
     c->type = CONSTANT;
@@ -273,7 +286,7 @@ void destroyConstant(Constant *c)
     free(c);
 }
 
-double evaluateConstant(Constant *c, double value)
+ldouble_t evaluateConstant(Constant *c, ldouble_t value)
 {
     UNUSED(value);
     return c->value;
@@ -309,7 +322,7 @@ void destroyExponential(Exponential *e)
     free(e);
 }
 
-double evaluateExponential(Exponential *e, double value)
+ldouble_t evaluateExponential(Exponential *e, ldouble_t value)
 {
     return pow(evaluate(e->base, value), evaluate(e->exponent, value));
 }
@@ -343,7 +356,7 @@ void destroyTrigonometric(Trigonometric *t)
     free(t);
 }
 
-double evaluateTrigonometric(Trigonometric *t, double value)
+ldouble_t evaluateTrigonometric(Trigonometric *t, ldouble_t value)
 {
     switch (t->trigType)
     {
@@ -412,7 +425,7 @@ void destroyInverseTrigonometric(InverseTrigonometric *it)
     free(it);
 }
 
-double evaluateInverseTrigonometric(InverseTrigonometric *it, double value)
+ldouble_t evaluateInverseTrigonometric(InverseTrigonometric *it, ldouble_t value)
 {
     switch (it->trigType)
     {
@@ -486,7 +499,7 @@ void destroyLogarithm(Logarithm *l)
     free(l);
 }
 
-double evaluateLogarithm(Logarithm *l, double value)
+ldouble_t evaluateLogarithm(Logarithm *l, ldouble_t value)
 {
     // printf("[DEBUG]: evaluateLogarithm: Check implementation & test\n");
     // log_b(a) = log(a) / log(b) 
@@ -508,8 +521,11 @@ SumChain *createSumChain()
 {
     SumChain *f = (SumChain *)malloc(sizeof(SumChain));
     f->type = SUM_CHAIN;
+    f->maxArgs = INIT_CHAIN_ARGS;
     f->argCount = 0;
-    for (int i = 0; i < MAX_FUNC_ARGS; i++)
+    f->args = (EVALABLE **)calloc(f->maxArgs, sizeof(EVALABLE *));
+    f->isPositive = (int *)calloc(f->maxArgs, sizeof(int));
+    for (int i = 0; i < f->maxArgs; i++)
     {
         f->args[i] = NULL;
     }
@@ -518,8 +534,16 @@ SumChain *createSumChain()
 
 void addSumChainArg(SumChain *f, EVALABLE *arg, int isPositive)
 {
+    if (f->argCount >= f->maxArgs)
+    {
+        printf("Resizing SumChain args\n");
+        f->maxArgs *= 2;
+        f->args = (EVALABLE **)realloc(f->args, f->maxArgs * sizeof(EVALABLE *));
+        f->isPositive = (int *)realloc(f->isPositive, f->maxArgs * sizeof(int));
+    }
     f->args[f->argCount] = arg;
-    f->isPositive[f->argCount++] = isPositive;
+    f->isPositive[f->argCount] = isPositive;
+    f->argCount++;
 }
 
 void destroySumChain(SumChain *f)
@@ -528,12 +552,14 @@ void destroySumChain(SumChain *f)
     {
         destroy(f->args[i]);
     }
+    free(f->args);
+    free(f->isPositive);
     free(f);
 }
 
-double evaluateSumChain(SumChain *f, double value)
+ldouble_t evaluateSumChain(SumChain *f, ldouble_t value)
 {
-    double result = 0;
+    ldouble_t result = 0;
     for (int i = 0; i < f->argCount && f->args[i] != NULL; i++)
     {
         if (f->isPositive[i] == 1)
@@ -655,7 +681,7 @@ void destroy(EVALABLE *e)
     }
 }
 
-double evaluate(EVALABLE *e, double value)
+ldouble_t evaluate(EVALABLE *e, ldouble_t value)
 {
     switch (EVALTYPE(e))
     {
@@ -798,7 +824,7 @@ EVALABLE *optimizeSumChain(SumChain *f)
     {
         f->args[i] = optimize(f->args[i]);
     }
-    double constantSum = 0;
+    ldouble_t constantSum = 0;
     SumChain *optimized = createSumChain();
     for (int i = 0; i < f->argCount; i++)
     {
@@ -837,7 +863,7 @@ EVALABLE *optimizeMulChain(MulChain *m)
     {
         m->args[i] = optimize(m->args[i]);
     }
-    double constantMul = 1;
+    ldouble_t constantMul = 1;
     MulChain *optimized = createMulChain();
     for (int i = 0; i < m->argCount; i++)
     {
@@ -876,8 +902,8 @@ EVALABLE *optimizeExponential(Exponential *e)
     e->exponent = optimize(e->exponent);
     if (EVALTYPE(e->base) == CONSTANT && EVALTYPE(e->exponent) == CONSTANT)
     {
-        double base = ((Constant *)e->base)->value;
-        double exponent = ((Constant *)e->exponent)->value;
+        ldouble_t base = ((Constant *)e->base)->value;
+        ldouble_t exponent = ((Constant *)e->exponent)->value;
         destroyExponential(e);
         return (EVALABLE *)createConstant(pow(base, exponent));
     }
@@ -890,8 +916,8 @@ EVALABLE *optimizeLogarithm(Logarithm *l)
     l->value = optimize(l->value);
     if (EVALTYPE(l->base) == CONSTANT && EVALTYPE(l->value) == CONSTANT)
     {
-        double base = ((Constant *)l->base)->value;
-        double value = ((Constant *)l->value)->value;
+        ldouble_t base = ((Constant *)l->base)->value;
+        ldouble_t value = ((Constant *)l->value)->value;
         destroyLogarithm(l);
         return (EVALABLE *)createConstant(log(value) / log(base));
     }
@@ -903,8 +929,8 @@ EVALABLE *optimizeTrigonometric(Trigonometric *t)
     t->arg = optimize(t->arg);
     if (EVALTYPE(t->arg) == CONSTANT)
     {
-        double val = ((Constant *)t->arg)->value;
-        double result = 0;
+        ldouble_t val = ((Constant *)t->arg)->value;
+        ldouble_t result = 0;
         switch (t->trigType)
         {
             case SIN:
@@ -937,8 +963,8 @@ EVALABLE *optimizeInverseTrigonometric(InverseTrigonometric *it)
     it->arg = optimize(it->arg);
     if (EVALTYPE(it->arg) == CONSTANT)
     {
-        double val = ((Constant *)it->arg)->value;
-        double result = 0;
+        ldouble_t val = ((Constant *)it->arg)->value;
+        ldouble_t result = 0;
         switch (it->trigType)
         {
             case ASIN:
@@ -1191,7 +1217,7 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
         else if (input[0] >= '0' && input[0] <= '9')
         {
             CHECK_ARG_AVAILABLE();
-            double value = 0;
+            ldouble_t value = 0;
             while (input[0] >= '0' && input[0] <= '9')
             {
                 value = value * 10 + (input[0] - '0');
@@ -1200,8 +1226,8 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
             if (input[0] == '.')
             {
                 input++;
-                double decimal = 0;
-                double divider = 10;
+                ldouble_t decimal = 0;
+                ldouble_t divider = 10;
                 while (input[0] >= '0' && input[0] <= '9')
                 {
                     decimal += (input[0] - '0') / divider;
@@ -1327,24 +1353,24 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
 
 /* Prototypes for solvers */
 
-double solveBisection(EVALABLE *e, double a, double b, double epsilon);
-double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon);
-double solveNewtonRaphson(EVALABLE *e, double x0, double epsilon);
+ldouble_t solveBisection(EVALABLE *e, ldouble_t a, ldouble_t b, ldouble_t epsilon);
+ldouble_t solveRegulaFalsi(EVALABLE *e, ldouble_t a, ldouble_t b, ldouble_t epsilon);
+ldouble_t solveNewtonRaphson(EVALABLE *e, ldouble_t x0, ldouble_t epsilon);
 
 /* integral functions */ 
-double integrateTrapez(EVALABLE *e, double a, double b, int n);
-double integrateSimpson13(EVALABLE *e, double a, double b, int n);
-double integrateSimpson38(EVALABLE *e, double a, double b, int n);
+ldouble_t integrateTrapez(EVALABLE *e, ldouble_t a, ldouble_t b, int n);
+ldouble_t integrateSimpson13(EVALABLE *e, ldouble_t a, ldouble_t b, int n);
+ldouble_t integrateSimpson38(EVALABLE *e, ldouble_t a, ldouble_t b, int n);
 
 
 /* solver implementations */
 
-double solveBisection(EVALABLE *e, double a, double b, double epsilon)
+ldouble_t solveBisection(EVALABLE *e, ldouble_t a, ldouble_t b, ldouble_t epsilon)
 {
     // TODO: Aralığı tanımsız yapan değer var mı kontrol et.
-    double fa = evaluate(e, a);
-    double fb = evaluate(e, b);
-    double c = 0;
+    ldouble_t fa = evaluate(e, a);
+    ldouble_t fb = evaluate(e, b);
+    ldouble_t c = 0;
     if (fa * fb > 0)
     {
         return NAN;
@@ -1352,7 +1378,7 @@ double solveBisection(EVALABLE *e, double a, double b, double epsilon)
     while ((b - a) > epsilon)
     {
         c = (a + b) / 2;
-        double fc = evaluate(e, c);
+        ldouble_t fc = evaluate(e, c);
         if (fc == 0)
         {
             return c;
@@ -1369,11 +1395,11 @@ double solveBisection(EVALABLE *e, double a, double b, double epsilon)
     return c;
 }
 
-double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon)
+ldouble_t solveRegulaFalsi(EVALABLE *e, ldouble_t a, ldouble_t b, ldouble_t epsilon)
 {
-    double fa = evaluate(e, a);
-    double fb = evaluate(e, b);
-    double c = 0;
+    ldouble_t fa = evaluate(e, a);
+    ldouble_t fb = evaluate(e, b);
+    ldouble_t c = 0;
     if (fa * fb > 0)
     {
         return NAN;
@@ -1381,7 +1407,7 @@ double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon)
     while ((b - a) > epsilon)
     {
         c = (a * fb - b * fa) / (fb - fa);
-        double fc = evaluate(e, c);
+        ldouble_t fc = evaluate(e, c);
         if (fc == 0)
         {
             return c;
@@ -1398,11 +1424,11 @@ double solveRegulaFalsi(EVALABLE *e, double a, double b, double epsilon)
     return c;
 }
 
-double solveNewtonRaphson(EVALABLE *e, double x0, double epsilon)
+ldouble_t solveNewtonRaphson(EVALABLE *e, ldouble_t x0, ldouble_t epsilon)
 {
-    double x = x0;
-    double fx = evaluate(e, x);
-    double dfx = (evaluate(e, x + epsilon) - fx) / epsilon;
+    ldouble_t x = x0;
+    ldouble_t fx = evaluate(e, x);
+    ldouble_t dfx = (evaluate(e, x + epsilon) - fx) / epsilon;
     while (ABS(fx) > epsilon)
     {
         x = x - fx / dfx;
@@ -1412,10 +1438,10 @@ double solveNewtonRaphson(EVALABLE *e, double x0, double epsilon)
     return x;
 }
 
-double integrateTrapez(EVALABLE *e, double a, double b, int n)
+ldouble_t integrateTrapez(EVALABLE *e, ldouble_t a, ldouble_t b, int n)
 {
-    double h = (b - a) / n;
-    double sum = 0;
+    ldouble_t h = (b - a) / n;
+    ldouble_t sum = 0;
     for (int i = 1; i < n; i++)
     {
         sum += evaluate(e, a + i * h);
@@ -1423,16 +1449,16 @@ double integrateTrapez(EVALABLE *e, double a, double b, int n)
     return h * (evaluate(e, a) + evaluate(e, b) + 2 * sum) / 2;
 }
 
-double integrateSimpson13(EVALABLE *e, double a, double b, int n)
+ldouble_t integrateSimpson13(EVALABLE *e, ldouble_t a, ldouble_t b, int n)
 {
     if (n % 2 != 0)
     {
         printf("n must be even for Simpson's 1/3 rule.\n");
         return NAN;
     }
-    double h = (b - a) / n;
-    double sum1 = 0;
-    double sum2 = 0;
+    ldouble_t h = (b - a) / n;
+    ldouble_t sum1 = 0;
+    ldouble_t sum2 = 0;
     for (int i = 1; i < n; i++)
     {
         if (i % 2 == 0)
@@ -1446,10 +1472,10 @@ double integrateSimpson13(EVALABLE *e, double a, double b, int n)
     return (h / 3) * (evaluate(e, a) + evaluate(e, b) + 2 * sum1 + 4 * sum2);
 }
 
-double integrateSimpson38(EVALABLE *e, double a, double b, int n)
+ldouble_t integrateSimpson38(EVALABLE *e, ldouble_t a, ldouble_t b, int n)
 {
-    double sum = 0;
-    double h = (b - a) / n;
+    ldouble_t sum = 0;
+    ldouble_t h = (b - a) / n;
     for (int i = 0; i < n; i++)
     {
         b = a + h;
@@ -1465,7 +1491,7 @@ typedef struct
 {
     int rows;
     int cols;
-    double **data;
+    ldouble_t **data;
 } Matrix;
 
 /* 
@@ -1515,7 +1541,7 @@ Matrix *copyMatrix(Matrix *m);
  * Returns:
  * - The result of the addition
 */
-Matrix *addMatrix(Matrix *m1, Matrix *m2, double scalar);
+Matrix *addMatrix(Matrix *m1, Matrix *m2, ldouble_t scalar);
 
 /* 
  * Multiply two matrices. m1 * m2
@@ -1577,7 +1603,7 @@ Matrix *solveLinearSystem(Matrix *A, Matrix *B);
  * Returns:
  * - The determinant of the matrix
 */
-double determinantMatrix(Matrix *m);
+ldouble_t determinantMatrix(Matrix *m);
 
 /* 
  * Add a row to another row. r1 = r1 + scalar * r2
@@ -1588,7 +1614,7 @@ double determinantMatrix(Matrix *m);
  * - r2: The row to be added
  * - scalar: The scalar to multiply the row to be added
 */
-void addRow(Matrix *m, int r1, int r2, double scalar);
+void addRow(Matrix *m, int r1, int r2, ldouble_t scalar);
 
 /* 
  * Multiply a row with a scalar. r = scalar * r
@@ -1598,7 +1624,7 @@ void addRow(Matrix *m, int r1, int r2, double scalar);
  * - r: The row to be multiplied
  * - scalar: The scalar to multiply the row
 */
-void multiplyRow(Matrix *m, int r, double scalar); 
+void multiplyRow(Matrix *m, int r, ldouble_t scalar); 
 
 /* 
  * Swap two rows. r1 <-> r2
@@ -1619,7 +1645,7 @@ void swapRows(Matrix *m, int r1, int r2);
  * - c2: The column to be added
  * - scalar: The scalar to multiply the column to be added
 */
-void addColumn(Matrix *m, int c1, int c2, double scalar);
+void addColumn(Matrix *m, int c1, int c2, ldouble_t scalar);
 
 /* 
  * Multiply a column with a scalar. c = scalar * c
@@ -1629,7 +1655,7 @@ void addColumn(Matrix *m, int c1, int c2, double scalar);
  * - c: The column to be multiplied
  * - scalar: The scalar to multiply the column
 */
-void multiplyColumn(Matrix *m, int c, double scalar);
+void multiplyColumn(Matrix *m, int c, ldouble_t scalar);
 
 /* 
  * Swap two columns. c1 <-> c2
@@ -1660,7 +1686,7 @@ Matrix *gauusElimination(Matrix *m);
  * Returns:
  * - The solution matrix
 */
-Matrix *gauusSeidel(Matrix *m, double epsilon);
+Matrix *gauusSeidel(Matrix *m, ldouble_t epsilon);
 
 
 Matrix *createMatrix(int rows, int cols)
@@ -1668,10 +1694,10 @@ Matrix *createMatrix(int rows, int cols)
     Matrix *m = (Matrix *)malloc(sizeof(Matrix));
     m->rows = rows;
     m->cols = cols;
-    m->data = (double **)malloc(rows * sizeof(double *));
+    m->data = (ldouble_t **)malloc(rows * sizeof(ldouble_t *));
     for (int i = 0; i < rows; i++)
     {
-        m->data[i] = (double *)malloc(cols * sizeof(double));
+        m->data[i] = (ldouble_t *)malloc(cols * sizeof(ldouble_t));
         for (int j = 0; j < cols; j++)
         {
             m->data[i][j] = 0;
@@ -1715,7 +1741,7 @@ Matrix *copyMatrix(Matrix *m)
     return copy;
 }
 
-Matrix *addMatrix(Matrix *m1, Matrix *m2, double scalar)
+Matrix *addMatrix(Matrix *m1, Matrix *m2, ldouble_t scalar)
 {
     if (m1->rows != m2->rows || m1->cols != m2->cols)
     {
@@ -1786,7 +1812,7 @@ Matrix *inverseMatrix(Matrix *m)
     Matrix *result = copyMatrix(m);
     for (int i = 0; i < result->rows; i++)
     {
-        double pivot = result->data[i][i];
+        ldouble_t pivot = result->data[i][i];
         if (pivot == 0)
         {
             for (int j = i + 1; j < result->rows; j++)
@@ -1806,7 +1832,7 @@ Matrix *inverseMatrix(Matrix *m)
         {
             if (j != i)
             {
-                double scalar = -result->data[j][i];
+                ldouble_t scalar = -result->data[j][i];
                 addRow(result, j, i, scalar);
                 addRow(identity, j, i, scalar);
             }
@@ -1816,7 +1842,7 @@ Matrix *inverseMatrix(Matrix *m)
     return identity;
 } 
 
-double determinantMatrix(Matrix *m)
+ldouble_t determinantMatrix(Matrix *m)
 {
     if (m->rows != m->cols)
     {
@@ -1828,7 +1854,7 @@ double determinantMatrix(Matrix *m)
         return m->data[0][0];
     }
 
-    double det = 0;
+    ldouble_t det = 0;
     for (int i = 0; i < m->rows; i++)
     {
         Matrix *minor = createMatrix(m->rows - 1, m->cols - 1);
@@ -1845,7 +1871,7 @@ double determinantMatrix(Matrix *m)
                 }
             }
         }
-        double sign = (i % 2 == 0) ? 1 : -1;
+        ldouble_t sign = (i % 2 == 0) ? 1 : -1;
         det += sign * m->data[0][i] * determinantMatrix(minor);
         destroyMatrix(minor);
     }
@@ -1853,7 +1879,7 @@ double determinantMatrix(Matrix *m)
     return det;
 }
 
-void addRow(Matrix *m, int r1, int r2, double scalar)
+void addRow(Matrix *m, int r1, int r2, ldouble_t scalar)
 {
     for (int i = 0; i < m->cols; i++)
     {
@@ -1861,7 +1887,7 @@ void addRow(Matrix *m, int r1, int r2, double scalar)
     }
 }
 
-void multiplyRow(Matrix *m, int r, double scalar)
+void multiplyRow(Matrix *m, int r, ldouble_t scalar)
 {
     for (int i = 0; i < m->cols; i++)
     {
@@ -1871,12 +1897,12 @@ void multiplyRow(Matrix *m, int r, double scalar)
 
 void swapRows(Matrix *m, int r1, int r2)
 {
-    double *temp = m->data[r1];
+    ldouble_t *temp = m->data[r1];
     m->data[r1] = m->data[r2];
     m->data[r2] = temp;
 }
 
-void addColumn(Matrix *m, int c1, int c2, double scalar)
+void addColumn(Matrix *m, int c1, int c2, ldouble_t scalar)
 {
     for (int i = 0; i < m->rows; i++)
     {
@@ -1884,7 +1910,7 @@ void addColumn(Matrix *m, int c1, int c2, double scalar)
     }
 }
 
-void multiplyColumn(Matrix *m, int c, double scalar)
+void multiplyColumn(Matrix *m, int c, ldouble_t scalar)
 {
     for (int i = 0; i < m->rows; i++)
     {
@@ -1896,7 +1922,7 @@ void swapColumns(Matrix *m, int c1, int c2)
 {
     for (int i = 0; i < m->rows; i++)
     {
-        double temp = m->data[i][c1];
+        ldouble_t temp = m->data[i][c1];
         m->data[i][c1] = m->data[i][c2];
         m->data[i][c2] = temp;
     }
@@ -1915,7 +1941,7 @@ Matrix *gauusElimination(Matrix *m)
     // Upper triangular form 
     for (int i = 0; i < copy->rows; i++)
     {
-        double pivot = copy->data[i][i];
+        ldouble_t pivot = copy->data[i][i];
         if (pivot == 0)
         {
             for (int j = i + 1; j < copy->rows; j++)
@@ -1931,7 +1957,7 @@ Matrix *gauusElimination(Matrix *m)
         multiplyRow(copy, i, 1 / pivot);
         for (int j = i + 1; j < copy->rows; j++)
         {
-            double scalar = -copy->data[j][i];
+            ldouble_t scalar = -copy->data[j][i];
             addRow(copy, j, i, scalar);
         }
     }
@@ -1950,7 +1976,7 @@ Matrix *gauusElimination(Matrix *m)
     return result;
 }
 
-Matrix *gauusSeidel(Matrix *m, double epsilon)
+Matrix *gauusSeidel(Matrix *m, ldouble_t epsilon)
 {
     if (m->rows != m->cols - 1)
     {
@@ -1965,7 +1991,7 @@ Matrix *gauusSeidel(Matrix *m, double epsilon)
     // Make sure the biggest element in each row is on the diagonal
     for (int i = 0; i < copy->cols - 1; i++)
     {
-        double max = 0;
+        ldouble_t max = 0;
         int maxIndex = 0;
         for (int j = i; j < copy->rows; j++)
         {
@@ -1985,7 +2011,7 @@ Matrix *gauusSeidel(Matrix *m, double epsilon)
     {
         for (int i = 0; i < copy->rows; i++)
         {
-            double sum = copy->data[i][copy->cols - 1];
+            ldouble_t sum = copy->data[i][copy->cols - 1];
             for (int j = 0; j < copy->cols - 1; j++)
             {
                 if (j != i)
@@ -2023,7 +2049,7 @@ Matrix *gauusSeidel(Matrix *m, double epsilon)
  * Returns:
  * - The derivative of the function at the point
 */ 
-double numericalDifferentiation(EVALABLE *f, double x, double h)
+ldouble_t numericalDifferentiation(EVALABLE *f, ldouble_t x, ldouble_t h)
 {
     return (evaluate(f, x + h) - evaluate(f, x)) / h;
 }
@@ -2081,13 +2107,13 @@ int mainBisection()
 {
     EVALABLE *f = getFunction();
 
-    double a, b, epsilon;
+    ldouble_t a, b, epsilon;
     printf("Enter the interval [a, b]: ");
     scanf("%Lf %Lf", &a, &b);
     printf("Enter the error tolerance: ");
     scanf("%Lf", &epsilon);
 
-    double result = solveBisection(f, a, b, epsilon);
+    ldouble_t result = solveBisection(f, a, b, epsilon);
     if (isnan(result))
     {
         printf("No root found in the interval.\n");
@@ -2106,13 +2132,13 @@ int mainRegulaFalsi()
 {
     EVALABLE *f = getFunction();
 
-    double a, b, epsilon;
+    ldouble_t a, b, epsilon;
     printf("Enter the interval [a, b]: ");
     scanf("%Lf %Lf", &a, &b);
     printf("Enter the error tolerance: ");
     scanf("%Lf", &epsilon);
 
-    double result = solveRegulaFalsi(f, a, b, epsilon);
+    ldouble_t result = solveRegulaFalsi(f, a, b, epsilon);
     if (isnan(result))
     {
         printf("No root found in the interval.\n");
@@ -2131,13 +2157,13 @@ int mainNewtonRaphson()
 {
     EVALABLE *f = getFunction();
 
-    double x0, epsilon;
+    ldouble_t x0, epsilon;
     printf("Enter the initial guess: ");
     scanf("%Lf", &x0);
     printf("Enter the error tolerance: ");
     scanf("%Lf", &epsilon);
 
-    double result = solveNewtonRaphson(f, x0, epsilon);
+    ldouble_t result = solveNewtonRaphson(f, x0, epsilon);
     printf("Root: %Lf\n", result);
 
     destroy(f);
@@ -2239,7 +2265,7 @@ int mainGauusSeidel()
         }
     }
 
-    double epsilon;
+    ldouble_t epsilon;
     printf("Enter the error tolerance: ");
     scanf("%Lf", &epsilon);
 
@@ -2256,13 +2282,13 @@ int mainNumericalDifferentiation()
 {
     EVALABLE *f = getFunction();
 
-    double x, h;
+    ldouble_t x, h;
     printf("Enter the point: ");
     scanf("%Lf", &x);
     printf("Enter the step size: ");
     scanf("%Lf", &h);
 
-    double result = numericalDifferentiation(f, x, h);
+    ldouble_t result = numericalDifferentiation(f, x, h);
     printf("Derivative: %Lf\n", result);
 
     destroy(f);
@@ -2280,14 +2306,14 @@ int mainSimpson()
 
     EVALABLE *f = getFunction();
 
-    double a, b;
+    ldouble_t a, b;
     int n;
     printf("Enter the interval [a, b]: ");
     scanf("%Lf %Lf", &a, &b);
     printf("Enter the number of subintervals: ");
     scanf("%d", &n);
 
-    double result;
+    ldouble_t result;
     if (option == 1)
     {
         result = integrateSimpson13(f, a, b, n);
@@ -2313,14 +2339,14 @@ int mainTrapez()
 {
     EVALABLE *f = getFunction();
 
-    double a, b;
+    ldouble_t a, b;
     int n;
     printf("Enter the interval [a, b]: ");
     scanf("%Lf %Lf", &a, &b);
     printf("Enter the number of subintervals: ");
     scanf("%d", &n);
 
-    double result = integrateTrapez(f, a, b, n);
+    ldouble_t result = integrateTrapez(f, a, b, n);
     printf("Integral: %Lf\n", result);
 
     destroy(f);
