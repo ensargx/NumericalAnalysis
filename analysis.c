@@ -2038,22 +2038,6 @@ Matrix *gauusSeidel(Matrix *m, ldouble_t epsilon)
     return result;
 }
 
-/* 
- * Calculate the derivative of a function at a point using numerical
- * differentiation method.
- *
- * Parameters:
- * - f: The function
- * - x: The point
- * - h: The step size
- * Returns:
- * - The derivative of the function at the point
-*/ 
-ldouble_t numericalDifferentiation(EVALABLE *f, ldouble_t x, ldouble_t h)
-{
-    return (evaluate(f, x + h) - evaluate(f, x)) / h;
-}
-
 EVALABLE *getFunction()
 {
     EVALABLE *f;
@@ -2282,13 +2266,36 @@ int mainNumericalDifferentiation()
 {
     EVALABLE *f = getFunction();
 
+    int option;
+    printf("Select the method:\n");
+    printf("1. Forward difference\n");
+    printf("2. Backward difference\n");
+    printf("3. Central difference\n");
+    scanf("%d", &option);
+
     ldouble_t x, h;
     printf("Enter the point: ");
     scanf("%Lf", &x);
     printf("Enter the step size: ");
     scanf("%Lf", &h);
 
-    ldouble_t result = numericalDifferentiation(f, x, h);
+    ldouble_t result;
+    switch (option)
+    {
+        case 1:
+            result = (evaluate(f, x + h) - evaluate(f, x)) / h;
+            break;
+        case 2:
+            result = (evaluate(f, x) - evaluate(f, x - h)) / h;
+            break;
+        case 3:
+            result = (evaluate(f, x + h) - evaluate(f, x - h)) / (2 * h);
+            break;
+        default:
+            printf("Invalid option.\n");
+            return 1;
+    }
+
     printf("Derivative: %Lf\n", result);
 
     destroy(f);
