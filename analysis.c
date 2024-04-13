@@ -536,7 +536,6 @@ void addSumChainArg(SumChain *f, EVALABLE *arg, int isPositive)
 {
     if (f->argCount >= f->maxArgs)
     {
-        printf("Resizing SumChain args\n");
         f->maxArgs *= 2;
         f->args = (EVALABLE **)realloc(f->args, f->maxArgs * sizeof(EVALABLE *));
         f->isPositive = (int *)realloc(f->isPositive, f->maxArgs * sizeof(int));
