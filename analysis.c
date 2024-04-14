@@ -1808,36 +1808,36 @@ Matrix *inverseMatrix(Matrix *m)
         identity->data[i][i] = 1;
     }
 
-    Matrix *result = copyMatrix(m);
-    for (int i = 0; i < result->rows; i++)
+    Matrix *copy = copyMatrix(m);
+    for (int i = 0; i < copy->rows; i++)
     {
-        ldouble_t pivot = result->data[i][i];
+        ldouble_t pivot = copy->data[i][i];
         if (pivot == 0)
         {
-            for (int j = i + 1; j < result->rows; j++)
+            for (int j = i + 1; j < copy->rows; j++)
             {
-                if (result->data[j][i] != 0)
+                if (copy->data[j][i] != 0)
                 {
-                    swapRows(result, i, j);
+                    swapRows(copy, i, j);
                     swapRows(identity, i, j);
                     break;
                 }
             }
-            pivot = result->data[i][i];
+            pivot = copy->data[i][i];
         }
-        multiplyRow(result, i, 1 / pivot);
+        multiplyRow(copy, i, 1 / pivot);
         multiplyRow(identity, i, 1 / pivot);
-        for (int j = 0; j < result->rows; j++)
+        for (int j = 0; j < copy->rows; j++)
         {
             if (j != i)
             {
-                ldouble_t scalar = -result->data[j][i];
-                addRow(result, j, i, scalar);
+                ldouble_t scalar = -copy->data[j][i];
+                addRow(copy, j, i, scalar);
                 addRow(identity, j, i, scalar);
             }
         }
     }
-    destroyMatrix(result);
+    destroyMatrix(copy);
     return identity;
 } 
 
@@ -2168,6 +2168,7 @@ int mainMatrixInverse()
 
     printf("Enter the matrix:\n");
     Matrix *m = createMatrix(rows, cols);
+
     for (int i = 0; i < m->rows; i++)
     {
         for (int j = 0; j < m->cols; j++)
