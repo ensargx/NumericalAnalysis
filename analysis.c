@@ -2188,6 +2188,7 @@ int mainMatrixInverse()
     }
 
     destroyMatrix(m);
+    destroyMatrix(result);
 
     return 0;
 }
