@@ -2225,6 +2225,7 @@ int mainGauusElimination()
     }
 
     destroyMatrix(m);
+    destroyMatrix(result);
 
     return 0;
 }
