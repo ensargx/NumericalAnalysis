@@ -124,57 +124,95 @@ typedef struct _Logarithm {
     EVALABLE *value;
 } Logarithm;
 
+/*
+ * Each EvalAble struct has a type field that is used to determine the type of the expression
+ * The type field is used to determine the type of the expression and to cast the expression
+ * to the correct type. i.e. (Exponential *)e or (Constant *)e etc.
+ *
+ * Each EvalAble type has its own constructor, destructor, evaluator and printer functions.
+ * The constructor is used to create a new expression of the given type.
+ * The destructor is used to free the memory used by the expression.
+ * The evaluator is used to evaluate the expression with the given value.
+ * The printer is used to print the expression.
+*/
+
 /* SumChain prototypes */
 Variable *createVariable();
 void destroyVariable(Variable *v);
 ldouble_t evaluateVariable(Variable *v, ldouble_t value);
 void printVariable(Variable *v);
 
+/* Constant prototypes */
 Constant *createConstant(ldouble_t value);
 void destroyConstant(Constant *c);
 ldouble_t evaluateConstant(Constant *c, ldouble_t value);
 void printConstant(Constant *c);
 
+/* Exponential prototypes */
 Exponential *createExponential(EVALABLE *base, EVALABLE *exponent);
 void destroyExponential(Exponential *e);
 ldouble_t evaluateExponential(Exponential *e, ldouble_t value);
 void printExponential(Exponential *e);
 
+/* Logarithm prototypes */
 Logarithm *createLogarithm(EVALABLE *base, EVALABLE *value);
 void destroyLogarithm(Logarithm *l);
 ldouble_t evaluateLogarithm(Logarithm *l, ldouble_t value);
 void printLogarithm(Logarithm *l);
 
+/* SumChain prototypes */
 SumChain *createSumChain();
 void addSumChainArg(SumChain *f, EVALABLE *argType, int sign);
 void destroySumChain(SumChain *f);
 ldouble_t evaluateSumChain(SumChain *f, ldouble_t value);
 void printSumChain(SumChain *f);
 
+/* MulChain prototypes */
 MulChain *createMulChain();
 void addMulChainArg(MulChain *m, EVALABLE *arg, int isDivided);
 void destroyMulChain(MulChain *m);
 ldouble_t evaluateMulChain(MulChain *m, ldouble_t value);
 void printMulChain(MulChain *m);
 
+/* Trigonometric prototypes */
 Trigonometric *createTrigonometric(TrigonometricType type, EVALABLE *arg);
 void destroyTrigonometric(Trigonometric *t);
 ldouble_t evaluateTrigonometric(Trigonometric *t, ldouble_t value);
 void printTrigonometric(Trigonometric *t);
 
+/* Inverse Trigonometric prototypes */
 InverseTrigonometric *createInverseTrigonometric(InverseTrigonometricType type, EVALABLE *arg);
 void destroyInverseTrigonometric(InverseTrigonometric *it);
 ldouble_t evaluateInverseTrigonometric(InverseTrigonometric *it, ldouble_t value);
 void printInverseTrigonometric(InverseTrigonometric *it);
 
+/* 
+ * Evaluate the expression with the given value
+ *
+ * Parameters:
+ * - e: The expression to be evaluated
+ * - value: The value to be used in the expression
+ * Returns:
+ * - The result of the expression
+*/
 ldouble_t evaluate(EVALABLE *e, ldouble_t value);
+
+/* 
+ * Destroy the expression and free the memory
+ *
+ * Parameters:
+ * - e: The expression to be printed
+*/
 void destroy(EVALABLE *e);
+
+/* 
+ * Print the expression
+ *
+ * Parameters:
+ * - e: The expression to be printed
+*/
 void print(EVALABLE *e);
 
-/* Function implementations */
-
-
-// Variable functions
 Variable *createVariable()
 {
     Variable *v = (Variable *)malloc(sizeof(Variable));
@@ -199,7 +237,6 @@ void printVariable(Variable *v)
     printf("x");
 }
 
-// MulChain functions
 MulChain *createMulChain()
 {
     MulChain *m = (MulChain *)malloc(sizeof(MulChain));
@@ -272,7 +309,6 @@ void printMulChain(MulChain *m)
     }
 }
 
-// Constant functions
 Constant *createConstant(ldouble_t value)
 {
     Constant *c = (Constant *)malloc(sizeof(Constant));
@@ -297,7 +333,6 @@ void printConstant(Constant *c)
     printf("%Lf", c->value);
 }
 
-// Exponential functions
 Exponential *createExponential(EVALABLE *base, EVALABLE *exponent)
 {
     Exponential *e = (Exponential *)malloc(sizeof(Exponential));
@@ -334,8 +369,6 @@ void printExponential(Exponential *e)
     print(e->exponent);
     printf(")");
 }
-
-// Trigonometric functions
 
 Trigonometric *createTrigonometric(TrigonometricType type, EVALABLE *arg)
 {
@@ -404,8 +437,6 @@ void printTrigonometric(Trigonometric *t)
     printf(")");
 }
 
-// Inverse Trigonometric functions
-
 InverseTrigonometric *createInverseTrigonometric(InverseTrigonometricType type, EVALABLE *arg)
 {
     InverseTrigonometric *it = (InverseTrigonometric *)malloc(sizeof(InverseTrigonometric));
@@ -473,7 +504,6 @@ void printInverseTrigonometric(InverseTrigonometric *it)
     printf(")");
 }
 
-// Logarithm functions
 
 Logarithm *createLogarithm(EVALABLE *base, EVALABLE *value)
 {
@@ -501,8 +531,6 @@ void destroyLogarithm(Logarithm *l)
 
 ldouble_t evaluateLogarithm(Logarithm *l, ldouble_t value)
 {
-    // printf("[DEBUG]: evaluateLogarithm: Check implementation & test\n");
-    // log_b(a) = log(a) / log(b) 
     return log(evaluate(l->value, value)) / log(evaluate(l->base, value));
 }
 
@@ -514,8 +542,6 @@ void printLogarithm(Logarithm *l)
     print(l->value);
     printf(")");
 }
-
-// SumChain functions
 
 SumChain *createSumChain()
 {
@@ -646,8 +672,6 @@ EVALABLE *copyEvalable(EVALABLE *e)
             return NULL;
     }
 }
-
-// Main functions
 
 void destroy(EVALABLE *e)
 {
@@ -993,6 +1017,19 @@ EVALABLE *optimizeInverseTrigonometric(InverseTrigonometric *it)
 
 /* Parser functions */
 
+/* 
+ * Parse the expression from the input string
+ *
+ * The parser function is responsible for parsing the expression from the input string
+ * and creating the necessary EvalAble structs to represent the expression.
+ *
+ * Parameters:
+ * - input: The input string to be parsed
+ * - e: The pointer to the EvalAble struct that will be created
+ * - s: The status code
+ * Returns:
+ * - The position of the input string after the expression
+*/
 char *parseExpression(char *input, EVALABLE **e, StatusCode *s);
 char *parseLogarithm(char *input, EVALABLE **e, StatusCode *s);
 char *parseInsideParantheses(char *input, EVALABLE **e, StatusCode *s);
@@ -1090,9 +1127,6 @@ char *parseInsideParantheses(char *input, EVALABLE **e, StatusCode *s)
         }
         i++;
     }
-    // char *insideParantheses = (char *)malloc(i);
-    // strncpy(insideParantheses, input+1, i-2);
-    // insideParantheses[i-2] = '\0';
     input[i - 1] = '\0';
     parseExpression(input + 1, e, s);
     input += i;
@@ -1131,17 +1165,22 @@ char *parseLogarithm(char *input, EVALABLE **e, StatusCode *s)
     return input;
 }
 
-/* Macro for checking if the argument is available
+/*
+ * Macro for checking if the argument is available
  * If the argument is available, the input is set to the previous character
  * and the current character is set to '*' to evaluate the expressions 
- * like 2x as 2*x
+ * like 2x as 2*x.
+ *
+ * (Creating a new variable called isArgAvailable is not necessary, arg can
+ * be compared to NULL to check if the argument is available. But this is 
+ * more readable and less error-prone.)
 */
-#define CHECK_ARG_AVAILABLE() \
-    if (isArgAvailable) \
-    { \
-        input--; \
-        input[0] = '*'; \
-        continue; \
+#define CHECK_ARG_AVAILABLE()              \
+    if (isArgAvailable)                    \
+    {                                      \
+        input--;                           \
+        input[0] = '*';                    \
+        continue;                          \
     }
 
 char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
@@ -1350,19 +1389,17 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
     return input;
 }
 
-/* Prototypes for solvers */
 
+/* Prototypes for solvers */
 ldouble_t solveBisection(EVALABLE *e, ldouble_t a, ldouble_t b, ldouble_t epsilon);
 ldouble_t solveRegulaFalsi(EVALABLE *e, ldouble_t a, ldouble_t b, ldouble_t epsilon);
 ldouble_t solveNewtonRaphson(EVALABLE *e, ldouble_t x0, ldouble_t epsilon);
 
-/* integral functions */ 
+/* Integral function prototypes */
 ldouble_t integrateTrapez(EVALABLE *e, ldouble_t a, ldouble_t b, int n);
 ldouble_t integrateSimpson13(EVALABLE *e, ldouble_t a, ldouble_t b, int n);
 ldouble_t integrateSimpson38(EVALABLE *e, ldouble_t a, ldouble_t b, int n);
 
-
-/* solver implementations */
 
 ldouble_t solveBisection(EVALABLE *e, ldouble_t a, ldouble_t b, ldouble_t epsilon)
 {
@@ -1551,6 +1588,7 @@ Matrix *addMatrix(Matrix *m1, Matrix *m2, ldouble_t scalar);
  * Returns:
  * - The result of the multiplication
 */
+Matrix *multiplyMatrix(Matrix *m1, Matrix *m2);
 
 /* 
  * Multiply a matrix with a scalar. scalar * m
@@ -1561,7 +1599,7 @@ Matrix *addMatrix(Matrix *m1, Matrix *m2, ldouble_t scalar);
  * Returns:
  * - The result of the multiplication
 */
-Matrix *multiplyMatrix(Matrix *m1, Matrix *m2);
+Matrix *multiplyMatrixScalar(Matrix *m, ldouble_t scalar);
 
 /* 
  * Transpose a matrix
