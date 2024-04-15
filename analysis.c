@@ -2127,6 +2127,10 @@ EVALABLE *getFunction()
 int mainBisection()
 {
     EVALABLE *f = getFunction();
+    if (f == NULL)
+    {
+        return 1;
+    }
 
     ldouble_t a, b, epsilon;
     printf("Enter the interval [a, b]: ");
@@ -2152,6 +2156,10 @@ int mainBisection()
 int mainRegulaFalsi()
 {
     EVALABLE *f = getFunction();
+    if (f == NULL)
+    {
+        return 1;
+    }
 
     ldouble_t a, b, epsilon;
     printf("Enter the interval [a, b]: ");
@@ -2177,6 +2185,10 @@ int mainRegulaFalsi()
 int mainNewtonRaphson()
 {
     EVALABLE *f = getFunction();
+    if (f == NULL)
+    {
+        return 1;
+    }
 
     ldouble_t x0, epsilon;
     printf("Enter the initial guess: ");
@@ -2305,6 +2317,10 @@ int mainGauusSeidel()
 int mainNumericalDifferentiation()
 {
     EVALABLE *f = getFunction();
+    if (f == NULL)
+    {
+        return 1;
+    }
 
     int option;
     printf("Select the method:\n");
@@ -2352,6 +2368,10 @@ int mainSimpson()
     scanf("%d", &option);
 
     EVALABLE *f = getFunction();
+    if (f == NULL)
+    {
+        return 1;
+    }
 
     ldouble_t a, b;
     int n;
@@ -2385,6 +2405,10 @@ int mainSimpson()
 int mainTrapez()
 {
     EVALABLE *f = getFunction();
+    if (f == NULL)
+    {
+        return 1;
+    }
 
     ldouble_t a, b;
     int n;
