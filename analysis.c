@@ -1727,11 +1727,12 @@ Matrix *gauusElimination(Matrix *m);
  *
  * Parameters:
  * - m: The augmented matrix
+ * - x0: The initial solution matrix
  * - epsilon: The error tolerance
  * Returns:
  * - The solution matrix
 */
-Matrix *gauusSeidel(Matrix *m, ldouble_t epsilon);
+Matrix *gauusSeidel(Matrix *m, Matrix *x0, ldouble_t epsilon);
 
 
 Matrix *createMatrix(int rows, int cols)
@@ -2021,7 +2022,7 @@ Matrix *gauusElimination(Matrix *m)
     return result;
 }
 
-Matrix *gauusSeidel(Matrix *m, ldouble_t epsilon)
+Matrix *gauusSeidel(Matrix *m, Matrix *x0, ldouble_t epsilon)
 {
     if (m->rows != m->cols - 1)
     {
@@ -2033,6 +2034,13 @@ Matrix *gauusSeidel(Matrix *m, ldouble_t epsilon)
     Matrix *converged = createMatrix(m->rows, 1);
     int convergedCount = 0;
 
+    for (int i = 0; i < x0->rows; i++)
+    {
+        result->data[i][0] = x0->data[i][0];
+    }
+
+    // TODO: KOŞEGENLERE EN BÜYÜK ELEMANLARI KOY 
+    // EMİN OL ÇARPIMLARI EN FAZLA OLACAK
     // Make sure the biggest element in each row is on the diagonal
     for (int i = 0; i < copy->cols - 1; i++)
     {
@@ -2309,14 +2317,22 @@ int mainGauusSeidel()
         }
     }
 
+    printf("Enter the initial solution matrix:\n");
+    Matrix *x0 = createMatrix(rows, 1);
+    for (int i = 0; i < x0->rows; i++)
+    {
+        scanf("%Lf", &x0->data[i][0]);
+    }
+
     ldouble_t epsilon;
     printf("Enter the error tolerance: ");
     scanf("%Lf", &epsilon);
 
-    Matrix *result = gauusSeidel(m, epsilon);
+    Matrix *result = gauusSeidel(m, x0, epsilon);
     printMatrix(result);
 
     destroyMatrix(m);
+    destroyMatrix(x0);
     destroyMatrix(result);
 
     return 0;
