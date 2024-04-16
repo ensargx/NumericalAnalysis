@@ -1115,7 +1115,7 @@ char *parseInsideParantheses(char *input, EVALABLE **e, StatusCode *s)
     }
     int i = 1;
     int paranthesesCount = 1;
-    while (paranthesesCount > 0)
+    while (paranthesesCount > 0 && input[i] != '\0')
     {
         if (input[i] == '(')
         {
@@ -1127,6 +1127,14 @@ char *parseInsideParantheses(char *input, EVALABLE **e, StatusCode *s)
         }
         i++;
     }
+    if (paranthesesCount > 0)
+    {
+        s->code = 2;
+        s->expected = ')';
+        s->pos = input + i;
+        return input;
+    }
+
     input[i - 1] = '\0';
     parseExpression(input + 1, e, s);
     input += i;
