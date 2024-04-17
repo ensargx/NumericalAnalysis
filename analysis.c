@@ -215,7 +215,8 @@ void print(EVALABLE *e);
 
 Variable *createVariable()
 {
-    Variable *v = (Variable *)malloc(sizeof(Variable));
+    Variable *v;
+    v = (Variable *)malloc(sizeof(Variable));
     v->type = VARIABLE;
     return v;
 }
@@ -239,13 +240,15 @@ void printVariable(Variable *v)
 
 MulChain *createMulChain()
 {
-    MulChain *m = (MulChain *)malloc(sizeof(MulChain));
+    MulChain *m; 
+    int i;
+    m = (MulChain *)malloc(sizeof(MulChain));
     m->type = MUL_CHAIN;
     m->argCount = 0;
     m->maxArgs = INIT_CHAIN_ARGS;
     m->args = (EVALABLE **)calloc(m->maxArgs, sizeof(EVALABLE *));
     m->isDivided = (int *)calloc(m->maxArgs, sizeof(int));
-    for (int i = 0; i < m->maxArgs; i++)
+    for (i = 0; i < m->maxArgs; i++)
     {
         m->args[i] = NULL;
         m->isDivided[i] = 0;
@@ -268,7 +271,8 @@ void addMulChainArg(MulChain *m, EVALABLE *arg, int isDivided)
 
 void destroyMulChain(MulChain *m)
 {
-    for (int i = 0; i < m->argCount && m->args[i] != NULL; i++)
+    int i;
+    for (i = 0; i < m->argCount && m->args[i] != NULL; i++)
     {
         destroy(m->args[i]);
     }
@@ -280,7 +284,8 @@ void destroyMulChain(MulChain *m)
 ldouble_t evaluateMulChain(MulChain *m, ldouble_t value)
 {
     ldouble_t result = 1;
-    for (int i = 0; i < m->argCount && m->args[i] != NULL; i++)
+    int i;
+    for (i = 0; i < m->argCount && m->args[i] != NULL; i++)
     {
         if (m->isDivided[i] == 1)
         {
@@ -294,7 +299,8 @@ ldouble_t evaluateMulChain(MulChain *m, ldouble_t value)
 
 void printMulChain(MulChain *m)
 {
-    for (int i = 0; i < m->argCount && m->args[i] != NULL; i++)
+    int i;
+    for (i = 0; i < m->argCount && m->args[i] != NULL; i++)
     {
         print(m->args[i]);
         if (i < m->argCount - 1 && m->args[i + 1] != NULL)
@@ -311,7 +317,8 @@ void printMulChain(MulChain *m)
 
 Constant *createConstant(ldouble_t value)
 {
-    Constant *c = (Constant *)malloc(sizeof(Constant));
+    Constant *c;
+    c = (Constant *)malloc(sizeof(Constant)); 
     c->type = CONSTANT;
     c->value = value;
     return c;
@@ -335,7 +342,8 @@ void printConstant(Constant *c)
 
 Exponential *createExponential(EVALABLE *base, EVALABLE *exponent)
 {
-    Exponential *e = (Exponential *)malloc(sizeof(Exponential));
+    Exponential *e;
+    e = (Exponential *)malloc(sizeof(Exponential));
     e->type = EXPONENTIAL;
     if (base == NULL)
     {
@@ -372,7 +380,8 @@ void printExponential(Exponential *e)
 
 Trigonometric *createTrigonometric(TrigonometricType type, EVALABLE *arg)
 {
-    Trigonometric *t = (Trigonometric *)malloc(sizeof(Trigonometric));
+    Trigonometric *t;
+    t = (Trigonometric *)malloc(sizeof(Trigonometric));
     t->type = TRIGONOMETRIC;
     if (arg == NULL)
     {
@@ -439,7 +448,8 @@ void printTrigonometric(Trigonometric *t)
 
 InverseTrigonometric *createInverseTrigonometric(InverseTrigonometricType type, EVALABLE *arg)
 {
-    InverseTrigonometric *it = (InverseTrigonometric *)malloc(sizeof(InverseTrigonometric));
+    InverseTrigonometric *it;
+    it = (InverseTrigonometric *)malloc(sizeof(InverseTrigonometric));
     it->type = INVERSE_TRIGONOMETRIC;
     if (arg == NULL)
     {
@@ -507,7 +517,8 @@ void printInverseTrigonometric(InverseTrigonometric *it)
 
 Logarithm *createLogarithm(EVALABLE *base, EVALABLE *value)
 {
-    Logarithm *l = (Logarithm *)malloc(sizeof(Logarithm));
+    Logarithm *l;
+    l = (Logarithm *)malloc(sizeof(Logarithm));
     l->type = LOGARITHM;
     if (base == NULL)
     {
@@ -545,13 +556,15 @@ void printLogarithm(Logarithm *l)
 
 SumChain *createSumChain()
 {
-    SumChain *f = (SumChain *)malloc(sizeof(SumChain));
+    SumChain *f;
+    int i;
+    f = (SumChain *)malloc(sizeof(SumChain));
     f->type = SUM_CHAIN;
     f->maxArgs = INIT_CHAIN_ARGS;
     f->argCount = 0;
     f->args = (EVALABLE **)calloc(f->maxArgs, sizeof(EVALABLE *));
     f->isPositive = (int *)calloc(f->maxArgs, sizeof(int));
-    for (int i = 0; i < f->maxArgs; i++)
+    for (i = 0; i < f->maxArgs; i++)
     {
         f->args[i] = NULL;
     }
@@ -573,7 +586,8 @@ void addSumChainArg(SumChain *f, EVALABLE *arg, int isPositive)
 
 void destroySumChain(SumChain *f)
 {
-    for (int i = 0; i < f->argCount && f->args[i] != NULL; i++)
+    int i;
+    for (i = 0; i < f->argCount && f->args[i] != NULL; i++)
     {
         destroy(f->args[i]);
     }
@@ -585,7 +599,8 @@ void destroySumChain(SumChain *f)
 ldouble_t evaluateSumChain(SumChain *f, ldouble_t value)
 {
     ldouble_t result = 0;
-    for (int i = 0; i < f->argCount && f->args[i] != NULL; i++)
+    int i;
+    for (i = 0; i < f->argCount && f->args[i] != NULL; i++)
     {
         if (f->isPositive[i] == 1)
         {
@@ -599,6 +614,7 @@ ldouble_t evaluateSumChain(SumChain *f, ldouble_t value)
 
 void printSumChain(SumChain *f)
 {
+    int i;
     if (f->argCount == 0)
     {
         return;
@@ -609,7 +625,7 @@ void printSumChain(SumChain *f)
         printf("-");
     }
     print(f->args[0]);
-    for (int i = 1; i < f->argCount && f->args[i] != NULL; i++)
+    for (i = 1; i < f->argCount && f->args[i] != NULL; i++)
     {
         if (f->isPositive[i] == 1)
         {
@@ -653,7 +669,8 @@ EVALABLE *copyEvalable(EVALABLE *e)
         case SUM_CHAIN:
         {
             SumChain *f = createSumChain();
-            for (int i = 0; i < ((SumChain *)e)->argCount; i++)
+            int i;
+            for (i = 0; i < ((SumChain *)e)->argCount; i++)
             {
                 addSumChainArg(f, copyEvalable(((SumChain *)e)->args[i]), ((SumChain *)e)->isPositive[i]);
             }
@@ -662,7 +679,8 @@ EVALABLE *copyEvalable(EVALABLE *e)
         case MUL_CHAIN:
         {
             MulChain *m = createMulChain();
-            for (int i = 0; i < ((SumChain *)e)->argCount; i++)
+            int i;
+            for (i = 0; i < ((SumChain *)e)->argCount; i++)
             {
                 addMulChainArg(m, copyEvalable(((SumChain *)e)->args[i]), ((SumChain *)e)->isPositive[i]);
             }
@@ -762,8 +780,7 @@ void print(EVALABLE *e)
 
 void printType(EVALABLE *e)
 {
-    EvalAbleType type = EVALTYPE(e);
-    switch (type)
+    switch (EVALTYPE(e))
     {
         case CONSTANT:
             printf("Constant\n");
@@ -843,13 +860,14 @@ EVALABLE *optimize(EVALABLE *e)
 
 EVALABLE *optimizeSumChain(SumChain *f)
 {
-    for (int i = 0; i < f->argCount; i++)
+    int i;
+    for (i = 0; i < f->argCount; i++)
     {
         f->args[i] = optimize(f->args[i]);
     }
     ldouble_t constantSum = 0;
     SumChain *optimized = createSumChain();
-    for (int i = 0; i < f->argCount; i++)
+    for (i = 0; i < f->argCount; i++)
     {
         if (EVALTYPE(f->args[i]) == CONSTANT)
         {
@@ -882,13 +900,15 @@ EVALABLE *optimizeSumChain(SumChain *f)
 
 EVALABLE *optimizeMulChain(MulChain *m)
 {
-    for (int i = 0; i < m->argCount; i++)
+    int i;
+    ldouble_t constantMul = 1;
+    MulChain *optimized;
+    for (i = 0; i < m->argCount; i++)
     {
         m->args[i] = optimize(m->args[i]);
     }
-    ldouble_t constantMul = 1;
-    MulChain *optimized = createMulChain();
-    for (int i = 0; i < m->argCount; i++)
+    optimized = createMulChain();
+    for (i = 0; i < m->argCount; i++)
     {
         if (EVALTYPE(m->args[i]) == CONSTANT)
         {
@@ -1041,6 +1061,7 @@ char *parseTrigonometric(char *input, EVALABLE **e, StatusCode *s)
     if (s->code != 0)
         return input;
     TrigonometricType type;
+    EVALABLE *arg;
     if (strncmp(input, "sin", 3) == 0)
         type = SIN;
     else if (strncmp(input, "cos", 3) == 0)
@@ -1063,7 +1084,6 @@ char *parseTrigonometric(char *input, EVALABLE **e, StatusCode *s)
         s->pos = input;
         return input;
     }
-    EVALABLE *arg;
     input = parseInsideParantheses(input, &arg, s);
     *e = (EVALABLE *)createTrigonometric(type, arg);
     return input;
@@ -1074,6 +1094,7 @@ char *parseInverseTrigonometric(char *input, EVALABLE **e, StatusCode *s)
     if (s->code != 0)
         return input;
     InverseTrigonometricType type;
+    EVALABLE *arg;
     if (strncmp(input, "asin", 4) == 0)
         type = ASIN;
     else if (strncmp(input, "acos", 4) == 0)
@@ -1096,7 +1117,6 @@ char *parseInverseTrigonometric(char *input, EVALABLE **e, StatusCode *s)
         s->pos = input;
         return input;
     }
-    EVALABLE *arg;
     input = parseInsideParantheses(input, &arg, s);
     *e = (EVALABLE *)createInverseTrigonometric(type, arg);
     return input;
@@ -1392,7 +1412,6 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
         result = (EVALABLE *)f;
     }
 
-    // Check if status code is set to 0 
     *e = result;
     return input;
 }
@@ -1486,7 +1505,8 @@ ldouble_t integrateTrapez(EVALABLE *e, ldouble_t a, ldouble_t b, int n)
 {
     ldouble_t h = (b - a) / n;
     ldouble_t sum = 0;
-    for (int i = 1; i < n; i++)
+    int i;
+    for (i = 1; i < n; i++)
     {
         sum += evaluate(e, a + i * h);
     }
@@ -1503,7 +1523,8 @@ ldouble_t integrateSimpson13(EVALABLE *e, ldouble_t a, ldouble_t b, int n)
     ldouble_t h = (b - a) / n;
     ldouble_t sum1 = 0;
     ldouble_t sum2 = 0;
-    for (int i = 1; i < n; i++)
+    int i;
+    for (i = 1; i < n; i++)
     {
         if (i % 2 == 0)
         {
@@ -1520,7 +1541,8 @@ ldouble_t integrateSimpson38(EVALABLE *e, ldouble_t a, ldouble_t b, int n)
 {
     ldouble_t sum = 0;
     ldouble_t h = (b - a) / n;
-    for (int i = 0; i < n; i++)
+    int i;
+    for (i = 0; i < n; i++)
     {
         b = a + h;
         sum += (b - a) / 8 * (evaluate(e, a) + 3 * evaluate(e, (a + (b-a)/3)) + 3 * evaluate(e, (a + 2*(b-a)/3)) + evaluate(e, b));
@@ -1737,14 +1759,16 @@ Matrix *gauusSeidel(Matrix *m, Matrix *x0, ldouble_t epsilon);
 
 Matrix *createMatrix(int rows, int cols)
 {
-    Matrix *m = (Matrix *)malloc(sizeof(Matrix));
+    Matrix *m;
+    int i, j;
+    m = (Matrix *)malloc(sizeof(Matrix));
     m->rows = rows;
     m->cols = cols;
     m->data = (ldouble_t **)malloc(rows * sizeof(ldouble_t *));
-    for (int i = 0; i < rows; i++)
+    for (i = 0; i < rows; i++)
     {
         m->data[i] = (ldouble_t *)malloc(cols * sizeof(ldouble_t));
-        for (int j = 0; j < cols; j++)
+        for (j = 0; j < cols; j++)
         {
             m->data[i][j] = 0;
         }
@@ -1754,7 +1778,8 @@ Matrix *createMatrix(int rows, int cols)
 
 void destroyMatrix(Matrix *m)
 {
-    for (int i = 0; i < m->rows; i++)
+    int i;
+    for (i = 0; i < m->rows; i++)
     {
         free(m->data[i]);
     }
@@ -1764,9 +1789,10 @@ void destroyMatrix(Matrix *m)
 
 void printMatrix(Matrix *m)
 {
-    for (int i = 0; i < m->rows; i++)
+    int i, j;
+    for (i = 0; i < m->rows; i++)
     {
-        for (int j = 0; j < m->cols; j++)
+        for (j = 0; j < m->cols; j++)
         {
             printf("%Lf ", m->data[i][j]);
         }
@@ -1776,10 +1802,12 @@ void printMatrix(Matrix *m)
 
 Matrix *copyMatrix(Matrix *m)
 {
-    Matrix *copy = createMatrix(m->rows, m->cols);
-    for (int i = 0; i < m->rows; i++)
+    Matrix *copy;
+    int i, j;
+    copy = createMatrix(m->rows, m->cols);
+    for (i = 0; i < m->rows; i++)
     {
-        for (int j = 0; j < m->cols; j++)
+        for (j = 0; j < m->cols; j++)
         {
             copy->data[i][j] = m->data[i][j];
         }
@@ -1793,10 +1821,12 @@ Matrix *addMatrix(Matrix *m1, Matrix *m2, ldouble_t scalar)
     {
         return NULL;
     }
-    Matrix *result = createMatrix(m1->rows, m1->cols);
-    for (int i = 0; i < m1->rows; i++)
+    Matrix *result;
+    int i, j;
+    result = createMatrix(m1->rows, m1->cols);
+    for (i = 0; i < m1->rows; i++)
     {
-        for (int j = 0; j < m1->cols; j++)
+        for (j = 0; j < m1->cols; j++)
         {
             result->data[i][j] = m1->data[i][j] + scalar * m2->data[i][j];
         }
@@ -1810,12 +1840,14 @@ Matrix *multiplyMatrix(Matrix *m1, Matrix *m2)
     {
         return NULL;
     }
-    Matrix *result = createMatrix(m1->rows, m2->cols);
-    for (int i = 0; i < m1->rows; i++)
+    Matrix *result;
+    int i, j, k;
+    result = createMatrix(m1->rows, m2->cols);
+    for (i = 0; i < m1->rows; i++)
     {
-        for (int j = 0; j < m2->cols; j++)
+        for (j = 0; j < m2->cols; j++)
         {
-            for (int k = 0; k < m1->cols; k++)
+            for (k = 0; k < m1->cols; k++)
             {
                 result->data[i][j] += m1->data[i][k] * m2->data[k][j];
             }
@@ -1826,10 +1858,12 @@ Matrix *multiplyMatrix(Matrix *m1, Matrix *m2)
 
 Matrix *transposeMatrix(Matrix *m)
 {
-    Matrix *result = createMatrix(m->cols, m->rows);
-    for (int i = 0; i < m->rows; i++)
+    Matrix *result;
+    int i, j;
+    result = createMatrix(m->cols, m->rows);
+    for (i = 0; i < m->rows; i++)
     {
-        for (int j = 0; j < m->cols; j++)
+        for (j = 0; j < m->cols; j++)
         {
             result->data[j][i] = m->data[i][j];
         }
@@ -1849,19 +1883,22 @@ Matrix *inverseMatrix(Matrix *m)
         return NULL;
     }
 
-    Matrix *identity = createMatrix(m->rows, m->cols);
-    for (int i = 0; i < m->rows; i++)
+    Matrix *identity;
+    Matrix *copy;
+    int i, j;
+    identity = createMatrix(m->rows, m->cols);
+    for (i = 0; i < m->rows; i++)
     {
         identity->data[i][i] = 1;
     }
 
-    Matrix *copy = copyMatrix(m);
-    for (int i = 0; i < copy->rows; i++)
+    copy = copyMatrix(m);
+    for (i = 0; i < copy->rows; i++)
     {
         ldouble_t pivot = copy->data[i][i];
         if (pivot == 0)
         {
-            for (int j = i + 1; j < copy->rows; j++)
+            for (j = i + 1; j < copy->rows; j++)
             {
                 if (copy->data[j][i] != 0)
                 {
@@ -1874,7 +1911,7 @@ Matrix *inverseMatrix(Matrix *m)
         }
         multiplyRow(copy, i, 1 / pivot);
         multiplyRow(identity, i, 1 / pivot);
-        for (int j = 0; j < copy->rows; j++)
+        for (j = 0; j < copy->rows; j++)
         {
             if (j != i)
             {
@@ -1901,12 +1938,14 @@ ldouble_t determinantMatrix(Matrix *m)
     }
 
     ldouble_t det = 0;
-    for (int i = 0; i < m->rows; i++)
+    ldouble_t sign;
+    int i, j, k;
+    for (i = 0; i < m->rows; i++)
     {
         Matrix *minor = createMatrix(m->rows - 1, m->cols - 1);
-        for (int j = 1; j < m->rows; j++)
+        for (j = 1; j < m->rows; j++)
         {
-            for (int k = 0; k < m->cols; k++)
+            for (k = 0; k < m->cols; k++)
             {
                 if (k < i)
                 {
@@ -1917,7 +1956,7 @@ ldouble_t determinantMatrix(Matrix *m)
                 }
             }
         }
-        ldouble_t sign = (i % 2 == 0) ? 1 : -1;
+        sign = (i % 2 == 0) ? 1 : -1;
         det += sign * m->data[0][i] * determinantMatrix(minor);
         destroyMatrix(minor);
     }
@@ -1927,7 +1966,8 @@ ldouble_t determinantMatrix(Matrix *m)
 
 void addRow(Matrix *m, int r1, int r2, ldouble_t scalar)
 {
-    for (int i = 0; i < m->cols; i++)
+    int i;
+    for (i = 0; i < m->cols; i++)
     {
         m->data[r1][i] += scalar * m->data[r2][i];
     }
@@ -1935,7 +1975,8 @@ void addRow(Matrix *m, int r1, int r2, ldouble_t scalar)
 
 void multiplyRow(Matrix *m, int r, ldouble_t scalar)
 {
-    for (int i = 0; i < m->cols; i++)
+    int i;
+    for (i = 0; i < m->cols; i++)
     {
         m->data[r][i] *= scalar;
     }
@@ -1950,7 +1991,8 @@ void swapRows(Matrix *m, int r1, int r2)
 
 void addColumn(Matrix *m, int c1, int c2, ldouble_t scalar)
 {
-    for (int i = 0; i < m->rows; i++)
+    int i;
+    for (i = 0; i < m->rows; i++)
     {
         m->data[i][c1] += scalar * m->data[i][c2];
     }
@@ -1958,7 +2000,8 @@ void addColumn(Matrix *m, int c1, int c2, ldouble_t scalar)
 
 void multiplyColumn(Matrix *m, int c, ldouble_t scalar)
 {
-    for (int i = 0; i < m->rows; i++)
+    int i;
+    for (i = 0; i < m->rows; i++)
     {
         m->data[i][c] *= scalar;
     }
@@ -1966,7 +2009,8 @@ void multiplyColumn(Matrix *m, int c, ldouble_t scalar)
 
 void swapColumns(Matrix *m, int c1, int c2)
 {
-    for (int i = 0; i < m->rows; i++)
+    int i;
+    for (i = 0; i < m->rows; i++)
     {
         ldouble_t temp = m->data[i][c1];
         m->data[i][c1] = m->data[i][c2];
@@ -1983,14 +2027,15 @@ Matrix *gauusElimination(Matrix *m)
 
     Matrix *copy = copyMatrix(m);
     Matrix *result = createMatrix(m->rows, 1);
+    int i, j;
 
     // Upper triangular form 
-    for (int i = 0; i < copy->rows; i++)
+    for (i = 0; i < copy->rows; i++)
     {
         ldouble_t pivot = copy->data[i][i];
         if (pivot == 0)
         {
-            for (int j = i + 1; j < copy->rows; j++)
+            for (j = i + 1; j < copy->rows; j++)
             {
                 if (copy->data[j][i] != 0)
                 {
@@ -2001,17 +2046,17 @@ Matrix *gauusElimination(Matrix *m)
             pivot = copy->data[i][i];
         }
         multiplyRow(copy, i, 1 / pivot);
-        for (int j = i + 1; j < copy->rows; j++)
+        for (j = i + 1; j < copy->rows; j++)
         {
             ldouble_t scalar = -copy->data[j][i];
             addRow(copy, j, i, scalar);
         }
     }
 
-    for (int i = copy->rows - 1; i >= 0; i--)
+    for (i = copy->rows - 1; i >= 0; i--)
     {
         result->data[i][0] = copy->data[i][copy->cols - 1];
-        for (int j = i + 1; j < copy->cols - 1; j++)
+        for (j = i + 1; j < copy->cols - 1; j++)
         {
             result->data[i][0] -= copy->data[i][j] * result->data[j][0];
         }
@@ -2033,8 +2078,9 @@ Matrix *gauusSeidel(Matrix *m, Matrix *x0, ldouble_t epsilon)
     Matrix *result = createMatrix(m->rows, 1);
     Matrix *converged = createMatrix(m->rows, 1);
     int convergedCount = 0;
+    int i, j;
 
-    for (int i = 0; i < x0->rows; i++)
+    for (i = 0; i < x0->rows; i++)
     {
         result->data[i][0] = x0->data[i][0];
     }
@@ -2042,11 +2088,11 @@ Matrix *gauusSeidel(Matrix *m, Matrix *x0, ldouble_t epsilon)
     // TODO: KOŞEGENLERE EN BÜYÜK ELEMANLARI KOY 
     // EMİN OL ÇARPIMLARI EN FAZLA OLACAK
     // Make sure the biggest element in each row is on the diagonal
-    for (int i = 0; i < copy->cols - 1; i++)
+    for (i = 0; i < copy->cols - 1; i++)
     {
         ldouble_t max = 0;
         int maxIndex = 0;
-        for (int j = i; j < copy->rows; j++)
+        for (j = i; j < copy->rows; j++)
         {
             if (ABS(copy->data[j][i]) > max)
             {
@@ -2062,10 +2108,10 @@ Matrix *gauusSeidel(Matrix *m, Matrix *x0, ldouble_t epsilon)
 
     while (convergedCount < m->rows)
     {
-        for (int i = 0; i < copy->rows; i++)
+        for (i = 0; i < copy->rows; i++)
         {
             ldouble_t sum = copy->data[i][copy->cols - 1];
-            for (int j = 0; j < copy->cols - 1; j++)
+            for (j = 0; j < copy->cols - 1; j++)
             {
                 if (j != i)
                 {
@@ -2075,7 +2121,7 @@ Matrix *gauusSeidel(Matrix *m, Matrix *x0, ldouble_t epsilon)
             result->data[i][0] = sum / copy->data[i][i];
         }
 
-        for (int i = 0; i < copy->rows; i++)
+        for (i = 0; i < copy->rows; i++)
         {
             if (ABS(result->data[i][0] - converged->data[i][0]) < epsilon)
             {
@@ -2112,11 +2158,12 @@ EVALABLE *getFunction()
     if (status.code != 0)
     {
         int pos = status.pos - input + 1;
+        int i;
         switch (status.code)
         {
             case 1:
                 printf("[Failed to parse]   ");
-                for (int i = 0; i < pos; i++)
+                for (i = 0; i < pos; i++)
                 {
                     printf(" ");
                 }
@@ -2124,7 +2171,7 @@ EVALABLE *getFunction()
                 break;
             case 2:
                 printf("[Failed to parse]   ");
-                for (int i = 0; i < pos; i++)
+                for (i = 0; i < pos; i++)
                 {
                     printf(" ");
                 }
@@ -2223,6 +2270,9 @@ int mainNewtonRaphson()
 int mainMatrixInverse()
 {
     int rows, cols;
+    int i, j;
+    Matrix *m;
+    Matrix *result;
     printf("Enter the number of rows and columns: ");
     scanf("%d %d", &rows, &cols);
 
@@ -2233,17 +2283,17 @@ int mainMatrixInverse()
     }
 
     printf("Enter the matrix:\n");
-    Matrix *m = createMatrix(rows, cols);
+    m = createMatrix(rows, cols);
 
-    for (int i = 0; i < m->rows; i++)
+    for (i = 0; i < m->rows; i++)
     {
-        for (int j = 0; j < m->cols; j++)
+        for (j = 0; j < m->cols; j++)
         {
             scanf("%Lf", &m->data[i][j]);
         }
     }
 
-    Matrix *result = inverseMatrix(m);
+    result = inverseMatrix(m);
     if (result == NULL)
     {
         printf("The matrix is singular.\n");
@@ -2262,6 +2312,7 @@ int mainMatrixInverse()
 int mainGauusElimination()
 {
     int rows, cols;
+    int i, j;
     printf("Enter the number of rows and columns: ");
     scanf("%d %d", &rows, &cols);
     if (rows != cols - 1)
@@ -2272,9 +2323,9 @@ int mainGauusElimination()
 
     printf("Enter the augmented matrix:\n");
     Matrix *m = createMatrix(rows, cols);
-    for (int i = 0; i < m->rows; i++)
+    for (i = 0; i < m->rows; i++)
     {
-        for (int j = 0; j < m->cols; j++)
+        for (j = 0; j < m->cols; j++)
         {
             scanf("%Lf", &m->data[i][j]);
         }
@@ -2298,7 +2349,12 @@ int mainGauusElimination()
 
 int mainGauusSeidel()
 {
+    Matrix *m;
+    Matrix *x0;
+    Matrix *result;
     int rows, cols;
+    ldouble_t epsilon;
+    int i, j;
     printf("Enter the number of rows and columns: ");
     scanf("%d %d", &rows, &cols);
     if (rows != cols - 1)
@@ -2308,27 +2364,26 @@ int mainGauusSeidel()
     }
 
     printf("Enter the augmented matrix:\n");
-    Matrix *m = createMatrix(rows, cols);
-    for (int i = 0; i < m->rows; i++)
+    m = createMatrix(rows, cols);
+    for (i = 0; i < m->rows; i++)
     {
-        for (int j = 0; j < m->cols; j++)
+        for (j = 0; j < m->cols; j++)
         {
             scanf("%Lf", &m->data[i][j]);
         }
     }
 
     printf("Enter the initial solution matrix:\n");
-    Matrix *x0 = createMatrix(rows, 1);
-    for (int i = 0; i < x0->rows; i++)
+    x0 = createMatrix(rows, 1);
+    for (i = 0; i < x0->rows; i++)
     {
         scanf("%Lf", &x0->data[i][0]);
     }
 
-    ldouble_t epsilon;
     printf("Enter the error tolerance: ");
     scanf("%Lf", &epsilon);
 
-    Matrix *result = gauusSeidel(m, x0, epsilon);
+    result = gauusSeidel(m, x0, epsilon);
     printMatrix(result);
 
     destroyMatrix(m);
@@ -2347,19 +2402,19 @@ int mainNumericalDifferentiation()
     }
 
     int option;
+    ldouble_t x, h;
+    ldouble_t result;
     printf("Select the method:\n");
     printf("1. Forward difference\n");
     printf("2. Backward difference\n");
     printf("3. Central difference\n");
     scanf("%d", &option);
 
-    ldouble_t x, h;
     printf("Enter the point: ");
     scanf("%Lf", &x);
     printf("Enter the step size: ");
     scanf("%Lf", &h);
 
-    ldouble_t result;
     switch (option)
     {
         case 1:
@@ -2385,26 +2440,27 @@ int mainNumericalDifferentiation()
 
 int mainSimpson()
 {
+    int option;
+    EVALABLE *f;
+    ldouble_t a, b;
+    ldouble_t result;
+    int n;
     printf("Enter which method to use:\n");
     printf("1. Simpson's 1/3 rule\n");
     printf("2. Simpson's 3/8 rule\n");
-    int option;
     scanf("%d", &option);
 
-    EVALABLE *f = getFunction();
+    f = getFunction();
     if (f == NULL)
     {
         return 1;
     }
 
-    ldouble_t a, b;
-    int n;
     printf("Enter the interval [a, b]: ");
     scanf("%Lf %Lf", &a, &b);
     printf("Enter the number of subintervals: ");
     scanf("%d", &n);
 
-    ldouble_t result;
     if (option == 1)
     {
         result = integrateSimpson13(f, a, b, n);
@@ -2435,13 +2491,14 @@ int mainTrapez()
     }
 
     ldouble_t a, b;
+    ldouble_t result;
     int n;
     printf("Enter the interval [a, b]: ");
     scanf("%Lf %Lf", &a, &b);
     printf("Enter the number of subintervals: ");
     scanf("%d", &n);
 
-    ldouble_t result = integrateTrapez(f, a, b, n);
+    result = integrateTrapez(f, a, b, n);
     printf("Integral: %Lf\n", result);
 
     destroy(f);
