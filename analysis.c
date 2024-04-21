@@ -2085,24 +2085,33 @@ Matrix *gauusSeidel(Matrix *m, Matrix *x0, ldouble_t epsilon)
         result->data[i][0] = x0->data[i][0];
     }
 
-    // TODO: KOŞEGENLERE EN BÜYÜK ELEMANLARI KOY 
-    // EMİN OL ÇARPIMLARI EN FAZLA OLACAK
     // Make sure the biggest element in each row is on the diagonal
     for (i = 0; i < copy->cols - 1; i++)
     {
-        ldouble_t max = 0;
-        int maxIndex = 0;
+        int maxRow = i;
+        ldouble_t max = ABS(copy->data[i][i]);
         for (j = i; j < copy->rows; j++)
         {
             if (ABS(copy->data[j][i]) > max)
             {
                 max = ABS(copy->data[j][i]);
-                maxIndex = j;
+                maxRow = j;
             }
         }
-        if (maxIndex != i)
+
+        if (maxRow != i)
         {
-            swapRows(copy, i, maxIndex);
+            // swapRows(copy, i, maxRow);
+            ldouble_t mulNow = copy->data[i][i] * copy->data[maxRow][maxRow];
+            ldouble_t mulSwap = copy->data[i][maxRow] * copy->data[maxRow][i];
+            printf("mulNow: %Lf, mulSwap: %Lf\n", mulNow, mulSwap);
+            printf("i: %d, maxRow: %d\n", i, maxRow);
+
+            if (ABS(mulSwap) > ABS(mulNow))
+            {
+                swapRows(copy, i, maxRow);
+                swapRows(result, i, maxRow);
+            }
         }
     }
 
