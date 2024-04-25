@@ -2515,9 +2515,98 @@ int mainTrapez()
     return 0;
 }
 
+int factorial(int n)
+{
+    ldouble_t result = 1;
+    int i;
+    for (i = 1; i <= n; i++)
+    {
+        result *= i;
+    }
+    return result;
+}
+
+EVALABLE *gregoryNewton(Matrix *points)
+{
+    int n = points->rows;
+    int i, j;
+    ldouble_t h, deltanf, constant;
+    MulChain *term;
+    SumChain *f, *arg;
+    Matrix *table = createMatrix(n, n + 1);
+
+    for (i = 0; i < n; i++)
+    {
+        table->data[i][0] = points->data[i][0];
+        table->data[i][1] = points->data[i][1];
+    }
+
+    for (j = 2; j < n + 1; j++)
+    {
+        for (i = 0; i < n - j + 1; i++)
+        {
+            table->data[i][j] = table->data[i + 1][j - 1] - table->data[i][j - 1];
+        }
+    }
+
+    printMatrix(table);
+
+    f = createSumChain();
+    constant = table->data[0][1];
+    addSumChainArg(f, (EVALABLE*)createConstant(constant), 1);
+
+    for (i = 1; i < n && constant != 0; i++)
+    {
+        printf("i: %d\n", i);
+        deltanf = table->data[0][i + 1] / factorial(i);
+        h = table->data[i][0] - table->data[i - 1][0];
+        constant = deltanf / (factorial(i) * pow(h, i));
+        printf("deltanf: %Lf, h: %Lf, constant: %Lf\n", deltanf, h, constant);
+
+        term = createMulChain();
+        for (j = 0; j < i; j++)
+        {
+            arg = createSumChain();
+            addSumChainArg(arg, (EVALABLE*)createVariable(), 1);
+            addSumChainArg(arg, (EVALABLE*)createConstant(table->data[j][0]), 0);
+            addMulChainArg(term, (EVALABLE*)arg, 0);
+        }
+
+        addMulChainArg(term, (EVALABLE*)createConstant(constant), 0);
+        addSumChainArg(f, (EVALABLE*)term, 1);
+    }
+
+    destroyMatrix(table);
+    return (EVALABLE*)f;
+}
+
 int mainGregoryNewton()
 {
-    // TODO: Implement Gregory Newton interpolation
+    int n, i, j;
+    EVALABLE *f;
+
+    printf("Enter the number of points: ");
+    scanf("%d", &n);
+
+    Matrix *points = createMatrix(n, n + 1);
+    printf("Enter the points:\n");
+    printf("x f(x)\n");
+    for (i = 0; i < n; i++)
+    {
+        for (j = 0; j < 2; j++)
+        {
+            scanf("%Lf", &points->data[i][j]);
+        }
+    }
+
+    f = gregoryNewton(points);
+
+    print(f);
+    printf("\n");
+
+    destroyMatrix(points);
+    destroy(f);
+
     return 0;
 }
 
