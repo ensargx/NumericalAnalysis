@@ -4,7 +4,7 @@
 
 Yazar: [Ensar Gök](https://www.linkedin.com/in/ensargok/)
 
-Github: [NumericalAnalysis](https://github.com/ensargx/NumericalAnalysis)
+GitHub: [NumericalAnalysis](https://github.com/ensargx/NumericalAnalysis)
 
 # Özellikler
 
@@ -349,6 +349,17 @@ char *parseLogarithm(char *input, EVALABLE **e, StatusCode *s);
 char *parseInsideParantheses(char *input, EVALABLE **e, StatusCode *s);
 char *parseTrigonometric(char *input, EVALABLE **e, StatusCode *s);
 char *parseInverseTrigonometric(char *input, EVALABLE **e, StatusCode *s);
+```
+
+## Yardımcı Fonksiyonlar / Makrolar
+
+```c
+typedef long double ldouble_t;
+#define ABS(x) ((x) < 0 ? -(x) : (x))
+
+ldouble_t evaluate(EVALABLE *e, ldouble_t value);
+#define EVALTYPE(x) ((EvalAble *)x)->type
+#define UNUSED(x) (void)(x)
 ```
 
 # Sayısal Analiz Yöntemleri (Fonksiyonlar için)
