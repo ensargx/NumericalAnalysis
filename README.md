@@ -7,49 +7,139 @@ Yazar: [Ensar Gök](https://www.linkedin.com/in/ensargok/) - 22011032
 GitHub: [NumericalAnalysis](https://github.com/ensargx/NumericalAnalysis)
 
 # İçindekiler 
- - [Özellikler](#özellikler)
+ - Özellikler
  - Ana Menü
  - Desteklenen Fonksiyonlar
-   - Polinom
-   - Üstel
-   - Logaritmik
-   - Trigonometrik
-   - Ters Trigonometrik
    - Örnekler
-- Matris Girişi
-  - Örnek
-- Bisection
-  - Parametreler
-  - Örnek
-- Regula-Falsi
-  - Parametreler
-  - Örnek
-- Newton-Raphson
-  - Parametreler
-  - Örnek
-- NxN'lik Bir Matrisin Tersi
-  - Parametreler
-  - Örnek
-- Gauss Eliminasyon Yöntemi
-  - Parametreler
-  - Örnek
-- Gauss-Seidel Yöntemi
-  - Parametreler
-  - Örnek
-- Sayısal Türev
-  - Parametreler
-  - Örnek
-- Simpson Yöntemi
-  - Parametreler
-  - Örnek
-- Trapez Yöntemi
-  - Parametreler
-  - Örnek
-- Değişken Dönüşümsüz Gregory-Newton Enterpolasyonu
-  - Parametreler
-  - Örnek
+ - Matris Girişi
+   - Örnek
+ - Bisection
+   - Parametreler
+   - Örnek
+ - Regula-Falsi
+   - Parametreler
+   - Örnek
+ - Newton-Raphson
+   - Parametreler
+   - Örnek
+ - NxN'lik Bir Matrisin Tersi
+   - Parametreler
+   - Örnek
+ - Gauss Eliminasyon Yöntemi
+   - Parametreler
+   - Örnek
+ - Gauss-Seidel Yöntemi
+   - Parametreler
+   - Örnek
+ - Sayısal Türev
+   - Parametreler
+   - Örnek
+ - Simpson Yöntemi
+   - Parametreler
+   - Örnek
+ - Trapez Yöntemi
+   - Parametreler
+   - Örnek
+ - Değişken Dönüşümsüz Gregory-Newton Enterpolasyonu
+   - Parametreler
+   - Örnek
+- Algoritma Yapısı
+  - EVALABLE
+  - Optimizasyon
+  - Parser
+  - Yardımcı Fonksiyonlar / Makrolar
 
+# Ana Menü
 
+Çalıştırılmak istenen işlem program çalıştırıldıktan sonra numarası girilip gereken parametrelerin verilmesiyle çalışır.
+İşlem bittikten sonra program kapanır.
+
+```bash
+ _____                                                 _____
+( ___ )-----------------------------------------------( ___ )
+ |   |                                                 |   |
+ |   |  _   _                           _           _  |   |
+ |   | | \ | |_   _ _ __ ___   ___ _ __(_) ___ __ _| | |   |
+ |   | |  \| | | | | '_ ` _ \ / _ \ '__| |/ __/ _` | | |   |
+ |   | | |\  | |_| | | | | | |  __/ |  | | (_| (_| | | |   |
+ |   | |_| \_|\__,_|_| |_| |_|\___|_|  |_|\___\__,_|_| |   |
+ |   |    / \   _ __   __ _| |_   _ ___(_)___          |   |
+ |   |   / _ \ | '_ \ / _` | | | | / __| / __|         |   |
+ |   |  / ___ \| | | | (_| | | |_| \__ \ \__ \         |   |
+ |   | /_/   \_\_| |_|\__,_|_|\__, |___/_|___/         |   |
+ |   |                        |___/                    |   |
+ |___|                                       byEnsarGok|___|
+(_____)-----------------------------------------------(_____)
+Select an option:
+1. Bisection
+2. Regula Falsi
+3. Newton-Raphson
+4. NxN Matrix inverse
+5. Gauus Elimination
+6. Gauus Seidel
+7. Numerical Differentiation
+8. Simpson's method
+9. Trapez Rule
+10. Gregory Newton enterpolation
+```
+
+# Desteklenen Fonksiyonlar
+Kök bulma yöntemleri (1, 2, 3), sayısal türev ve integral yöntemleri (7, 8, 9) ve enterpolasyon yöntemleri (10) için ilk istenilen parametre fonksiyondur.
+Bu fonksiyon polinom, üstel, trigonometrik ve ters trigonometrik tiplerinin hepsini barındırabilir.
+İstenen fonksiyon syntax kurallarına uygun girildikten sonra program tarafından parse edilip gerekli parametre için uygun fonksiyon oluşturulur.
+
+## Örnekler
+```bash
+Enter your function: x^(2 + sin(3 + ln(x)))+acos(log_(pi)(xsin(x)))
+[Optimized] f(x) = (x^((sin((log_2.718282(x)+3.000000))+2.000000))+acos(log_3.141593(x*sin(x))))
+```
+
+```bash
+Enter your function: 2x+x^(2)/3 + acos(6pi/x)
+[Optimized] f(x) = (x*2.000000+x^(2.000000)*0.333333+acos(x*18.849556))
+```
+
+# Matris Girişi
+Matrisin tersi ve lineer denklem çözüm yöntemleri için gerekli matris için önce matris boyutu sonra ise matris girilir
+
+## Örnek
+
+```bash
+Enter the number of rows and columns: 3 3
+Enter the matrix:
+1 2 9
+0 5 11
+21 0.2 1
+```
+
+# Bisection Yöntemi
+
+## Parametreler 
+- Fonksiyon
+- a: başlangıç değeri
+- b: bitiş değeri
+- epsilon: Hata miktarı
+
+## Örnek 
+```bash
+Enter your function: x^(3) - 7x^(2) + 14x - 6
+[Optimized] f(x) = (x^(3.000000)-x^(2.000000)*7.000000+x*14.000000+-6.000000)
+Enter the interval [a, b]: 0 1
+Enter the error tolerance: 0.001
+Root: 0.584961
+```
+
+# Regula Falsi Yöntemi
+## Parametreler 
+- Fonksiyon
+- a: başlangıç değeri
+- b: bitiş değeri
+- epsilon: Hata miktarı
+
+## Örnek 
+```bash
+
+```
 
 # Özellikler
 
@@ -308,7 +398,7 @@ void destroy(EVALABLE *e)
 }
 ```
 
-## Optimizasyon Algoritması
+## Optimizasyon
 Optimizasyon, Verilen bir EvalAble'yi constant haline getirmeyi hedefler. Eğer bir sin fonksiyonu parametre olarak constant değer alıyorsa direkt hesaplanabilir. Bu sebeple öncelikle DFS yardımıyla en genel fonksiyondan en küçük fonksiyona kadar tüm EvalAble'ler tek tek kontrol edilir. Örn. sin(log_(10)(100)) fonksiyonu için optimizasyon algoritması çağırılırsa öncelikle sin'in arg'ı constant mı diye kontrol edilir, log(100) constant değil, logaritmadır. Bu sebeple bu fonksiyon için tekrardan optimize çağırılır, eğer sonuç constant çıkarsa sinüs fonksiyonu da hesaplanabilir demektir, aksi taktirde hesaplanamaz. log_(10)(100) için optimize fonksiyonu çağırıldığında log'un hem tabanı hem de üsü constanttır, bu yüzden log'un değeri hesaplanır ve log_(10)(100)'ün değeri olan 2 constant bir değer olarak sinüse döner, constant bir değer döndüğü için bu sefer tekrardan sinüs fonksiyonunun değeri hesaplanabilir. 
 
 Örnek:
@@ -405,121 +495,4 @@ typedef long double ldouble_t;
 ldouble_t evaluate(EVALABLE *e, ldouble_t value);
 #define EVALTYPE(x) ((EvalAble *)x)->type
 #define UNUSED(x) (void)(x)
-```
-
-# Sayısal Analiz Yöntemleri (Fonksiyonlar için)
-
-## Bisection
-```c
-ldouble_t solveBisection(EVALABLE *e, ldouble_t a, ldouble_t b, ldouble_t epsilon)
-{
-    // TODO: Aralığı tanımsız yapan değer var mı kontrol et.
-    ldouble_t fa = evaluate(e, a);
-    ldouble_t fb = evaluate(e, b);
-    ldouble_t c = 0;
-    if (fa * fb > 0)
-    {
-        return NAN;
-    }
-    while ((b - a) > epsilon)
-    {
-        c = (a + b) / 2;
-        ldouble_t fc = evaluate(e, c);
-        if (fc == 0)
-        {
-            return c;
-        }
-        else if (fa * fc < 0)
-        {
-            b = c;
-            fb = fc;
-        } else {
-            a = c;
-            fa = fc;
-        }
-    }
-    return c;
-}
-```
-(Todo'nun implementi biraz aşırıya kaçacağı için Banu Hoca'ya sorulup yapılmadı)
-
-## Regula Falsi
-```c
-ldouble_t solveRegulaFalsi(EVALABLE *e, ldouble_t a, ldouble_t b, ldouble_t epsilon)
-{
-    ldouble_t fa = evaluate(e, a);
-    ldouble_t fb = evaluate(e, b);
-    ldouble_t c = 0;
-    if (fa * fb > 0)
-    {
-        return NAN;
-    }
-    while ((b - a) > epsilon)
-    {
-        c = (a * fb - b * fa) / (fb - fa);
-        ldouble_t fc = evaluate(e, c);
-        if (fc == 0)
-        {
-            return c;
-        }
-        else if (fa * fc < 0)
-        {
-            b = c;
-            fb = fc;
-        } else {
-            a = c;
-            fa = fc;
-        }
-    }
-    return c;
-}
-```
-
-## Newton Raphson
-```c
-ldouble_t solveNewtonRaphson(EVALABLE *e, ldouble_t x0, ldouble_t epsilon)
-{
-    ldouble_t x = x0;
-    ldouble_t fx = evaluate(e, x);
-    ldouble_t dfx = (evaluate(e, x + epsilon) - fx) / epsilon;
-    while (ABS(fx) > epsilon)
-    {
-        x = x - fx / dfx;
-        fx = evaluate(e, x);
-        dfx = (evaluate(e, x + epsilon) - fx) / epsilon;
-    }
-    return x;
-}
-```
-
-## Trapez 
-```c
-ldouble_t integrateTrapez(EVALABLE *e, ldouble_t a, ldouble_t b, int n)
-{
-    ldouble_t h = (b - a) / n;
-    ldouble_t sum = 0;
-    int i;
-    for (i = 1; i < n; i++)
-    {
-        sum += evaluate(e, a + i * h);
-    }
-    return h * (evaluate(e, a) + evaluate(e, b) + 2 * sum) / 2;
-}
-```
-
-## Simpson
-```c
-ldouble_t integrateSimpson38(EVALABLE *e, ldouble_t a, ldouble_t b, int n)
-{
-    ldouble_t sum = 0;
-    ldouble_t h = (b - a) / n;
-    int i;
-    for (i = 0; i < n; i++)
-    {
-        b = a + h;
-        sum += (b - a) / 8 * (evaluate(e, a) + 3 * evaluate(e, (a + (b-a)/3)) + 3 * evaluate(e, (a + 2*(b-a)/3)) + evaluate(e, b));
-        a = b;
-    }
-    return sum;
-}
 ```
