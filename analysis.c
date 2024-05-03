@@ -2545,19 +2545,15 @@ EVALABLE *gregoryNewton(Matrix *points)
         }
     }
 
-    printMatrix(table);
-
     f = createSumChain();
     constant = table->data[0][1];
     addSumChainArg(f, (EVALABLE*)createConstant(constant), 1);
 
     for (i = 1; i < n && constant != 0; i++)
     {
-        printf("i: %d\n", i);
         deltanf = table->data[0][i + 1] / factorial(i);
         h = table->data[i][0] - table->data[i - 1][0];
         constant = deltanf / (factorial(i) * pow(h, i));
-        printf("deltanf: %Lf, h: %Lf, constant: %Lf\n", deltanf, h, constant);
 
         term = createMulChain();
         for (j = 0; j < i; j++)
