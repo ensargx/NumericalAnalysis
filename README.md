@@ -49,6 +49,11 @@ GitHub: [NumericalAnalysis](https://github.com/ensargx/NumericalAnalysis)
   - Parser
   - Yardımcı Fonksiyonlar / Makrolar
 
+### Yapılan Yöntemler (hepsi)
+| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|----|
+| 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1  |
+
 # Ana Menü
 
 Çalıştırılmak istenen işlem program çalıştırıldıktan sonra numarası girilip gereken parametrelerin verilmesiyle çalışır.
