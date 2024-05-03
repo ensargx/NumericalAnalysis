@@ -166,6 +166,7 @@ Root: 0.585786
 
 # NxN’lik Bir Matrisin Tersi
 ## Parametreler
+
 - Matris: Tersi alınacak matris
 ## Örnek
 ```bash
@@ -184,6 +185,7 @@ Enter the matrix:
 # Gauss Eliminasyon Yöntemi
 ## Parametreler
 - Matris: Genişletilmiş katsayılar matrisi
+
 ## Örnek
 ```bash
 Enter the number of rows and columns: 3 4
@@ -201,7 +203,9 @@ Enter the augmented matrix:
 - Matris: Genişletilmiş katsayılar matrisi
 - x0: Başlangıç çözüm matrisi
 - epsilon: Tolerans
+
 # Örnek
+
 ```bash
 Enter the number of rows and columns: 3 4
 Enter the augmented matrix:
@@ -222,6 +226,7 @@ Enter the error tolerance: 0.000001
 - Metod: Fark türü (ileri - geri - merkezi)
 - x: türevin alınacağı nokta
 - h: adım büyüklüğü
+  
 ## Örnek
 ```bash
 Enter your function: sin(x^(2)) * ln(x + 1) + e^(x) * cos(2x)
@@ -242,6 +247,7 @@ Derivative: 54.688348
 - Fonksiyon
 - a, b: Başlangıç ve bitiş noktası
 - N: Bölüm sayısı
+  
 ## Örnek
 ```bash
 Enter which method to use:
@@ -260,6 +266,7 @@ Integral: 0.416667
 - Fonksiyon
 - a, b: İntegral aralığı
 - N: adım sayısı
+  
 ## Örnek
 ```bash
 Enter your function: 1 / (1 + x^(2))
@@ -272,6 +279,7 @@ Integral: 0.782794
 ## Parametreler 
 - N: balangıç matrisi için x ve f(x) miktarı
 - x f(x): başlangıç için x ve f(x) değerleri
+  
 ## Örnek
 ```bash
 Enter the number of points: 7
