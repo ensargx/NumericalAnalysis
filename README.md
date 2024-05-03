@@ -138,7 +138,148 @@ Root: 0.584961
 
 ## Örnek 
 ```bash
+Enter your function: x^(3) - 2x^(2) - 5
+[Optimized] f(x) = (x^(3.000000)-x^(2.000000)*2.000000+-5.000000)
+Enter the interval [a, b]: 2 3
+Enter the error tolerance: 0.0001
+Root: 2.690646
+```
 
+# Newton-Raphson Yöntemi
+## Parametreler
+- Fonksiyon
+- x0: Başlangıç değeri
+- epsilon: Hata miktarı
+## Örnek
+```bash
+Enter your function: x^(3) - 7x^(2) + 14x - 6
+[Optimized] f(x) = (x^(3.000000)-x^(2.000000)*7.000000+x*14.000000+-6.000000)
+Enter the initial guess: 0
+Enter the error tolerance: 0.000000001
+Root: 0.585786
+```
+
+# NxN’lik Bir Matrisin Tersi
+## Parametreler
+- Matris: Tersi alınacak matris
+## Örnek
+```bash
+Enter the number of rows and columns: 4 4
+Enter the matrix:
+1 2 3 4
+7 11 9 0
+9 8 7 6
+1 12 3 14
+-0.200000 -0.076923 0.196154 -0.026923
+-0.200000 0.076923 -0.046154 0.076923
+0.400000 0.076923 -0.096154 -0.073077
+0.100000 -0.076923 0.046154 0.023077
+```
+
+# Gauss Eliminasyon Yöntemi
+## Parametreler
+- Matris: Genişletilmiş katsayılar matrisi
+## Örnek
+```bash
+Enter the number of rows and columns: 3 4
+Enter the augmented matrix:
+3.6 2.4 -1.8 6.3
+4.2 -5.8 2.1 7.5
+0.8 3.5 6.5 3.7
+1.810759
+0.120125
+0.281685
+```
+
+# Gauss-Seidel Yöntemi
+## Parametreler
+- Matris: Genişletilmiş katsayılar matrisi
+- x0: Başlangıç çözüm matrisi
+- epsilon: Tolerans
+# Örnek
+```bash
+Enter the number of rows and columns: 3 4
+Enter the augmented matrix:
+-1 4 -3 -8
+3 1 -2 9
+1 -1 4 1
+Enter the initial solution matrix:
+1 1 1
+Enter the error tolerance: 0.000001
+3.000000
+-2.000000
+-1.000000
+```
+
+# Sayısal Türev
+## Parametreler
+- Fonksiyon: Türevi alınacak fonksiyon
+- Metod: Fark türü (ileri - geri - merkezi)
+- x: türevin alınacağı nokta
+- h: adım büyüklüğü
+## Örnek
+```bash
+Enter your function: sin(x^(2)) * ln(x + 1) + e^(x) * cos(2x)
+[Optimized] f(x) = (sin(x^(2.000000))*log_2.718282((x+1.000000))+2.718282^(x)*cos(x*2.000000))
+Select the method:
+1. Forward difference
+2. Backward difference
+3. Central difference
+3
+Enter the point: 5
+Enter the step size: 0.001
+Derivative: 54.688348
+```
+
+# Simpson Yöntemi
+## Parametreler
+- metod: 1/3 yöntemi & 3/8 yöntemi
+- Fonksiyon
+- a, b: Başlangıç ve bitiş noktası
+- N: Bölüm sayısı
+## Örnek
+```bash
+Enter which method to use:
+1. Simpson's 1/3 rule
+2. Simpson's 3/8 rule
+2
+Enter your function: (x^(2) - 1)(x + 2)
+[Optimized] f(x) = (x^(2.000000)+-1.000000)*(x+2.000000)
+Enter the interval [a, b]: -2 -1
+Enter the number of subintervals: 4
+Integral: 0.416667
+```
+
+# Trapez Yöntemi
+## Parametreler
+- Fonksiyon
+- a, b: İntegral aralığı
+- N: adım sayısı
+## Örnek
+```bash
+Enter your function: 1 / (1 + x^(2))
+[Optimized] f(x) = (x^(2.000000)+1.000000)
+Enter the interval [a, b]: 0 1
+Enter the number of subintervals: 4
+Integral: 0.782794
+```
+# Değişken Dönüşümsüz Gregory-Newton Enterpolasyonu
+## Parametreler 
+- N: balangıç matrisi için x ve f(x) miktarı
+- x f(x): başlangıç için x ve f(x) değerleri
+## Örnek
+```bash
+Enter the number of points: 7
+Enter the points:
+x f(x)
+0 -4
+1 -2
+2 14
+3 62
+4 160
+5 326
+6 578
+(-4.000000+(x-0.000000)*2.000000+(x-0.000000)*(x-1.000000)*3.500000+(x-0.000000)*(x-1.000000)*(x-2.000000)*0.500000+(x-0.000000)*(x-1.000000)*(x-2.000000)*(x-3.000000)*0.000000)
 ```
 
 # Özellikler
