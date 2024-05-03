@@ -1471,7 +1471,7 @@ ldouble_t solveRegulaFalsi(EVALABLE *e, ldouble_t a, ldouble_t b, ldouble_t epsi
     {
         c = (a * fb - b * fa) / (fb - fa);
         ldouble_t fc = evaluate(e, c);
-        if (fc == 0)
+        if (ABS(fc) < epsilon)
         {
             return c;
         }
