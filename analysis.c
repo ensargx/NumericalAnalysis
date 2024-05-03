@@ -1430,7 +1430,6 @@ ldouble_t integrateSimpson38(EVALABLE *e, ldouble_t a, ldouble_t b, int n);
 
 ldouble_t solveBisection(EVALABLE *e, ldouble_t a, ldouble_t b, ldouble_t epsilon)
 {
-    // TODO: Aralığı tanımsız yapan değer var mı kontrol et.
     ldouble_t fa = evaluate(e, a);
     ldouble_t fb = evaluate(e, b);
     ldouble_t c = 0;
@@ -2101,11 +2100,8 @@ Matrix *gauusSeidel(Matrix *m, Matrix *x0, ldouble_t epsilon)
 
         if (maxRow != i)
         {
-            // swapRows(copy, i, maxRow);
             ldouble_t mulNow = copy->data[i][i] * copy->data[maxRow][maxRow];
             ldouble_t mulSwap = copy->data[i][maxRow] * copy->data[maxRow][i];
-            printf("mulNow: %Lf, mulSwap: %Lf\n", mulNow, mulSwap);
-            printf("i: %d, maxRow: %d\n", i, maxRow);
 
             if (ABS(mulSwap) > ABS(mulNow))
             {
