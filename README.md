@@ -2,9 +2,54 @@
 
 ## BLM1022 - Sayısal Analiz Dönem Projesi - 2024
 
-Yazar: [Ensar Gök](https://www.linkedin.com/in/ensargok/)
+Yazar: [Ensar Gök](https://www.linkedin.com/in/ensargok/) - 22011032
 
 GitHub: [NumericalAnalysis](https://github.com/ensargx/NumericalAnalysis)
+
+# İçindekiler 
+ - [Özellikler](#özellikler)
+ - Ana Menü
+ - Desteklenen Fonksiyonlar
+   - Polinom
+   - Üstel
+   - Logaritmik
+   - Trigonometrik
+   - Ters Trigonometrik
+   - Örnekler
+- Matris Girişi
+  - Örnek
+- Bisection
+  - Parametreler
+  - Örnek
+- Regula-Falsi
+  - Parametreler
+  - Örnek
+- Newton-Raphson
+  - Parametreler
+  - Örnek
+- NxN'lik Bir Matrisin Tersi
+  - Parametreler
+  - Örnek
+- Gauss Eliminasyon Yöntemi
+  - Parametreler
+  - Örnek
+- Gauss-Seidel Yöntemi
+  - Parametreler
+  - Örnek
+- Sayısal Türev
+  - Parametreler
+  - Örnek
+- Simpson Yöntemi
+  - Parametreler
+  - Örnek
+- Trapez Yöntemi
+  - Parametreler
+  - Örnek
+- Değişken Dönüşümsüz Gregory-Newton Enterpolasyonu
+  - Parametreler
+  - Örnek
+
+
 
 # Özellikler
 
