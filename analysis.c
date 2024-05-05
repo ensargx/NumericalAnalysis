@@ -1441,7 +1441,7 @@ ldouble_t solveBisection(EVALABLE *e, ldouble_t a, ldouble_t b, ldouble_t epsilo
     {
         c = (a + b) / 2;
         ldouble_t fc = evaluate(e, c);
-        if (fc == 0)
+        if (ABS(fc) < epsilon)
         {
             return c;
         }
