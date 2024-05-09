@@ -2576,6 +2576,7 @@ int mainGregoryNewton()
 {
     int n, i, j;
     EVALABLE *f;
+    ldouble_t x;
 
     printf("Enter the number of points: ");
     scanf("%d", &n);
@@ -2595,6 +2596,10 @@ int mainGregoryNewton()
 
     print(f);
     printf("\n");
+    printf("Enter value: ");
+
+    scanf("%Lf", &x);
+    printf("f(%Lf) = %Lf\n", x, evaluate(f, x));
 
     destroyMatrix(points);
     destroy(f);
