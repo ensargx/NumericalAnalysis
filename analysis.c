@@ -2,8 +2,15 @@
  * analysis.c
  * Author: Ensar Gök
  *
- * Numerical analysis functions
- */
+ * School project for the course "Numerical Analysis"
+ * Numerical analysis functions and expression parser
+ * and evaluator. 
+ * Note: This program does NOT use shunting yard algorithm, 
+ * instead it uses array of pointers to store the expressions
+ * and evaluate them in order of appearance.
+ *
+ * compile: gcc analysis.c -o analysis -lm -Wall -Wextra
+*/
 
 #include <stdio.h>
 #include <math.h>
