@@ -2028,7 +2028,7 @@ Matrix *gauusElimination(Matrix *m)
     Matrix *result = createMatrix(m->rows, 1);
     int i, j;
 
-    // Upper triangular form 
+    /* upper triangular form */ 
     for (i = 0; i < copy->rows; i++)
     {
         ldouble_t pivot = copy->data[i][i];
@@ -2084,7 +2084,7 @@ Matrix *gauusSeidel(Matrix *m, Matrix *x0, ldouble_t epsilon)
         result->data[i][0] = x0->data[i][0];
     }
 
-    // Make sure the biggest element in each row is on the diagonal
+    /* Make sure the biggest element in each row is on the diagonal */ 
     for (i = 0; i < copy->cols - 1; i++)
     {
         int maxRow = i;
@@ -2147,7 +2147,7 @@ EVALABLE *getFunction()
     EVALABLE *f;
     printf("Enter your function: ");
     char input[256];
-    // clear buffer
+    /* clear buffer */ 
     while (getchar() != '\n');
     if (fgets(input, 256, stdin) == NULL)
     {
