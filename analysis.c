@@ -7,7 +7,7 @@
  * and evaluator. 
  * Note: This program does NOT use shunting yard algorithm, 
  * instead it uses array of pointers to store the expressions
- * and evaluate them in order of appearance.
+ * and evaluate them in order of operations.
  *
  * compile: gcc analysis.c -o analysis -lm -Wall -Wextra
 */
