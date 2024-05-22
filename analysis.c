@@ -19,6 +19,12 @@
 
 #define EVALABLE void*
 
+/* In order to change the initial size of the chain arguments 
+ * change the value of INIT_CHAIN_ARGS to the desired value.
+ * i.e.
+ * gcc -DINIT_CHAIN_ARGS=8 analysis.c -o analysis -lm -Wall -Wextra
+ * this will set the initial size of the chain arguments to 8
+*/
 #ifndef INIT_CHAIN_ARGS
 #define INIT_CHAIN_ARGS 4
 #endif
