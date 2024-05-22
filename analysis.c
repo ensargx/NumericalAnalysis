@@ -2556,7 +2556,7 @@ EVALABLE *gregoryNewton(Matrix *points)
 {
     int n = points->rows;
     int i, j;
-    ldouble_t h, deltanf, constant;
+    ldouble_t constant;
     MulChain *term;
     SumChain *f, *arg;
     Matrix *table = createMatrix(n, n + 1);
@@ -2572,6 +2572,7 @@ EVALABLE *gregoryNewton(Matrix *points)
         for (i = 0; i < n - j + 1; i++)
         {
             table->data[i][j] = table->data[i + 1][j - 1] - table->data[i][j - 1];
+            table->data[i][j] /= table->data[i + j - 1][0] - table->data[i][0];
         }
     }
 
@@ -2581,9 +2582,7 @@ EVALABLE *gregoryNewton(Matrix *points)
 
     for (i = 1; i < n && constant != 0; i++)
     {
-        deltanf = table->data[0][i + 1] / factorial(i);
-        h = table->data[i][0] - table->data[i - 1][0];
-        constant = deltanf / (factorial(i) * pow(h, i));
+        constant = table->data[0][i + 1];
 
         term = createMulChain();
         for (j = 0; j < i; j++)
