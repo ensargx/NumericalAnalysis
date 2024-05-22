@@ -1338,30 +1338,51 @@ char *parseExpression(char *input, EVALABLE **e, StatusCode *s)
         }
         else if (input[0] == '+' || input[0] == '-')
         {
-            addMulChainArg(m, arg, isDivided);
-            arg = NULL;
-            EVALABLE *val;
-            if (m->argCount == 1)
+            if (isArgAvailable)
             {
-                val = copyEvalable(m->args[0]);
-                destroyMulChain(m);
+                addMulChainArg(m, arg, isDivided);
+                arg = NULL;
+                EVALABLE *val;
+                if (m->argCount == 1)
+                {
+                    val = copyEvalable(m->args[0]);
+                    destroyMulChain(m);
+                }
+                else
+                {
+                    val = (EVALABLE *)m;
+                }
+                addSumChainArg(f, val, isPositive);
+                if (input[0] == '+')
+                {
+                    isPositive = 1;
+                }
+                else if (input[0] == '-')
+                {
+                    isPositive = 0;
+                }
+                m = createMulChain();
+                input++;
+                isArgAvailable = 0;
             }
-            else
+            else 
             {
-                val = (EVALABLE *)m;
+                if (input[0] == '+')
+                {
+                    isPositive = 1;
+                }
+                else if (input[0] == '-')
+                {
+                    isPositive = 0;
+                }
+                /* make - -> -1* */ 
+                if (input[0] == '-')
+                {
+                    addMulChainArg(m, (EVALABLE *)createConstant(-1), 0);
+                    isPositive = 0;
+                }
+                input++;
             }
-            addSumChainArg(f, val, isPositive);
-            if (input[0] == '+')
-            {
-                isPositive = 1;
-            }
-            else if (input[0] == '-')
-            {
-                isPositive = 0;
-            }
-            m = createMulChain();
-            input++;
-            isArgAvailable = 0;
         }
         else if (input[0] == '*')
         {
