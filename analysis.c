@@ -956,96 +956,92 @@ EVALABLE *optimizeExponential(Exponential *e)
 {
     e->base = optimize(e->base);
     e->exponent = optimize(e->exponent);
-    if (EVALTYPE(e->base) == CONSTANT && EVALTYPE(e->exponent) == CONSTANT)
-    {
-        ldouble_t base = ((Constant *)e->base)->value;
-        ldouble_t exponent = ((Constant *)e->exponent)->value;
-        destroyExponential(e);
-        return (EVALABLE *)createConstant(pow(base, exponent));
-    }
-    return (EVALABLE *)e;
+    if (EVALTYPE(e->base) != CONSTANT || EVALTYPE(e->exponent) != CONSTANT)
+        return (EVALABLE *)e;
+
+    ldouble_t base = ((Constant *)e->base)->value;
+    ldouble_t exponent = ((Constant *)e->exponent)->value;
+    destroyExponential(e);
+    return (EVALABLE *)createConstant(pow(base, exponent));
 }
 
 EVALABLE *optimizeLogarithm(Logarithm *l)
 {
     l->base = optimize(l->base);
     l->value = optimize(l->value);
-    if (EVALTYPE(l->base) == CONSTANT && EVALTYPE(l->value) == CONSTANT)
-    {
-        ldouble_t base = ((Constant *)l->base)->value;
-        ldouble_t value = ((Constant *)l->value)->value;
-        destroyLogarithm(l);
-        return (EVALABLE *)createConstant(log(value) / log(base));
-    }
-    return (EVALABLE *)l;
+    if (EVALTYPE(l->base) != CONSTANT || EVALTYPE(l->value) != CONSTANT)
+        return (EVALABLE *)l;
+
+    ldouble_t base = ((Constant *)l->base)->value;
+    ldouble_t value = ((Constant *)l->value)->value;
+    destroyLogarithm(l);
+    return (EVALABLE *)createConstant(log(value) / log(base));
 }
 
 EVALABLE *optimizeTrigonometric(Trigonometric *t)
 {
     t->arg = optimize(t->arg);
-    if (EVALTYPE(t->arg) == CONSTANT)
+    if (EVALTYPE(t->arg) != CONSTANT)
+        return (EVALABLE *)t;
+
+    ldouble_t val = ((Constant *)t->arg)->value;
+    ldouble_t result = 0;
+    switch (t->trigType)
     {
-        ldouble_t val = ((Constant *)t->arg)->value;
-        ldouble_t result = 0;
-        switch (t->trigType)
-        {
-            case SIN:
-                result = sin(val);
-                break;
-            case COS:
-                result = cos(val);
-                break;
-            case TAN:
-                result = tan(val);
-                break;
-            case CSC:
-                result = 1 / sin(val);
-                break;
-            case SEC:
-                result = 1 / cos(val);
-                break;
-            case COT:
-                result = 1 / tan(val);
-                break;
-        }
-        destroyTrigonometric(t);
-        return (EVALABLE *)createConstant(result);
+        case SIN:
+            result = sin(val);
+            break;
+        case COS:
+            result = cos(val);
+            break;
+        case TAN:
+            result = tan(val);
+            break;
+        case CSC:
+            result = 1 / sin(val);
+            break;
+        case SEC:
+            result = 1 / cos(val);
+            break;
+        case COT:
+            result = 1 / tan(val);
+            break;
     }
-    return (EVALABLE *)t;
+    destroyTrigonometric(t);
+    return (EVALABLE *)createConstant(result);
 }
 
 EVALABLE *optimizeInverseTrigonometric(InverseTrigonometric *it)
 {
     it->arg = optimize(it->arg);
-    if (EVALTYPE(it->arg) == CONSTANT)
+    if (EVALTYPE(it->arg) != CONSTANT)
+        return (EVALABLE *)it;
+    
+    ldouble_t val = ((Constant *)it->arg)->value;
+    ldouble_t result = 0;
+    switch (it->trigType)
     {
-        ldouble_t val = ((Constant *)it->arg)->value;
-        ldouble_t result = 0;
-        switch (it->trigType)
-        {
-            case ASIN:
-                result = asin(val);
-                break;
-            case ACOS:
-                result = acos(val);
-                break;
-            case ATAN:
-                result = atan(val);
-                break;
-            case ACSC:
-                result = asin(1 / val);
-                break;
-            case ASEC:
-                result = acos(1 / val);
-                break;
-            case ACOT:
-                result = atan(1 / val);
-                break;
-        }
-        destroyInverseTrigonometric(it);
-        return (EVALABLE *)createConstant(result);
+        case ASIN:
+            result = asin(val);
+            break;
+        case ACOS:
+            result = acos(val);
+            break;
+        case ATAN:
+            result = atan(val);
+            break;
+        case ACSC:
+            result = asin(1 / val);
+            break;
+        case ASEC:
+            result = acos(1 / val);
+            break;
+        case ACOT:
+            result = atan(1 / val);
+            break;
     }
-    return (EVALABLE *)it;
+    destroyInverseTrigonometric(it);
+    return (EVALABLE *)createConstant(result);
 }
 
 /* Parser functions */
