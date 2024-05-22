@@ -82,7 +82,7 @@ Select an option:
 4. NxN Matrix inverse
 5. Gauus Elimination
 6. Gauus Seidel
-7. Numerical Differentiation
+7. Numerical Derivative
 8. Simpson's method
 9. Trapez Rule
 10. Gregory Newton enterpolation

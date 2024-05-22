@@ -2428,7 +2428,7 @@ int mainGauusSeidel()
     return 0;
 }
 
-int mainNumericalDifferentiation()
+int mainNumericalDerivative()
 {
     EVALABLE *f = getFunction();
     if (f == NULL)
@@ -2664,7 +2664,7 @@ int main()
 "4. NxN Matrix inverse\n"
 "5. Gauus Elimination\n"
 "6. Gauus Seidel\n"
-"7. Numerical Differentiation\n"
+"7. Numerical Derivative\n"
 "8. Simpson's method\n"
 "9. Trapez Rule\n"
 "10. Gregory Newton enterpolation\n";
@@ -2689,7 +2689,7 @@ int main()
         case 6:
             return mainGauusSeidel();
         case 7:
-            return mainNumericalDifferentiation();
+            return mainNumericalDerivative();
         case 8:
             return mainSimpson();
         case 9:
